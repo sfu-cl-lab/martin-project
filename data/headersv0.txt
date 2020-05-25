@@ -1,0 +1,24 @@
+Season = season year
+GameID = ID of game, currently just description
+Date
+HomeTeam
+AwayTeam
+PlayerTeam = Team that executed the action
+PlayerName = Name of player that executed the action
+PlayerID = ID code of player that executed the action
+Skill = Action type (S=serve, R=receive, A=attack, B=block, D=dig, E=set, F=free ball)
+Evaluation = evaluation symbol for the executed skill
+AttackComb = type of attack (only for attack codes)
+AttackPass = evaluation of receive that led up to this attack, used for first set and attack after serve recieve, equals T for subsequent attacks
+SetCall = setter call, i.e. the middle attacker combination called for
+StartZone = start zone for trajectories
+EndZone = end zone for trajectories
+SelfRot = rotation of team executing action
+OppRot = rotation of opponent team
+SelfScore = score in current set of team executing action
+OppScore = score in current set of opponent team
+Setter = ID code of setter
+LeftAttacker = ID code of left side attacker
+RightAttacker = ID code of right side attacker
+MidAttacker = ID code of middle attacker
+PipeAttacker = ID code of pipe (back row middle) attacker
