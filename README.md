@@ -20,3 +20,10 @@ There are two versions of the dataset: one where locations are described categor
 - ActionStartZone, ActionEndZone: start and end location of action performed
 - ActionSpeed: flag denoting a spin serve or a fast set (vs. float serve or high set)
 - ActionOutcome: one of the possible action outcomes: = (error), -, /, !, +, # (perfect)
+
+To incorporate action history, up to 10 most recent actions (from beginning of rally) are included in each data point.
+
+## Notebooks:
+- DecisionTree: contains experiments with fitting a decision tree classifier to the dataset, predicting whether the point will go to the home team (1) or away team (-1). Prediction probabilities also considered using ratio of training data in leaves. 5-fold cross validation is used to prevent overfitting.
+- RandomForest: same as above but using a random forest classifier.
+- GradientBoostedTrees: some experiments same as above using gradient boosting to attempt to improve accuracy.
