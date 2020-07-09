@@ -1,8 +1,22 @@
 # martin-project
-Martin's MSc project
+Martin's MSc project repository
 
-May 25:
-Added a 'version 0' dataset file with data from the UBC 2019/2020 season. Not all details are included yet so there might some additions later on. Column descriptions in headersv0.txt.
+## Dataset
+The dataset contains play-by-play data from all manually tagged UBC Men's Volleyball games in 2018/2019 and 2019/2020 seasons. 2017/2018 games will be added, maybe in full but at least some of them (some corrections still needed in the data). Additionally, a number of games between other teams in Canada West are included as they were used for game planning for UBC.
 
-May 28:
-Added some notes on state-action space in vb_statespace.pdf
+There are two versions of the dataset: one where locations are described categorically using zones (Z1, Z2, ...) and one where they are represented with X and Y coordinates.
+
+#### Columns
+- Season
+- GameID
+- PlayerTeam: team executing last action
+- PlayerName: player executing last action
+- RewardValue, RewardDistance: +1 for home point, -1 for away point, RewardDistance contains distance to end of current rally
+- SetNumber: current set (1-5)
+- ScoreMax: maximum of the home and away scores in current set (eg. for 21-18 it would be 21)
+- ScoreDiff: away score minus home score in current set (eg. for 21-18 it would be -3)
+- ActionHome, ActionAway: flags for action performed by home or away team
+- ActionType: one of Serve, Receive, sEt, Attack, Block, Dig or Free-ball
+- ActionStartZone, ActionEndZone: start and end location of action performed
+- ActionSpeed: flag denoting a spin serve or a fast set (vs. float serve or high set)
+- ActionOutcome: one of the possible action outcomes: = (error), -, /, !, +, # (perfect)
