@@ -34,12 +34,12 @@ class vball_lstm:
             self.b1 = tf.Variable(tf.zeros([num_layer_2]), name="b_1")
             self.y1 = tf.matmul(self.rnn_last, self.W1) + self.b1
             self.activation1 = tf.nn.relu(self.y1, name='activation')
+            #self.act1_drop = tf.nn.dropout(self.activation1, rate=0.01)
 
         with tf.name_scope("Dense_Layer_second"):
             self.W2 = tf.get_variable('w2_xaiver', [num_layer_2, num_layer_3], initializer=tf.contrib.layers.xavier_initializer())
             self.b2 = tf.Variable(tf.zeros([num_layer_3]), name="b_2")
             self.read_out = tf.matmul(self.activation1, self.W2) + self.b2
-            # self.activation1 = tf.nn.relu(self.y1, name='activation')
 
         self.y = tf.placeholder("float", [None, num_layer_3])
 
