@@ -148,10 +148,6 @@
 \maketitle{}
 \makecommittee{}
 
-%\addtoToC{Ethics Statement}%
-%\includepdf[pagecommand={\thispagestyle{plain}}]{ethicsstatement.pdf}%
-%\clearpage
-
 \begin{abstract}
 	This is a blank document from which you can start writing your thesis.
 \end{abstract}
@@ -193,7 +189,49 @@
 
 By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
 
+\chapter{Results}
 
+\section{Verifying Bellman Equation Agreement}
+
+The action-value function $Q_\pi$ for a given policy $\pi$ over a Markov decision process satisfies a recursive relationship in terms of the current state-action pair $(s,a)$ and possible future state-action pairs $(S_{t+1},A_{t+1})$: 
+\begin{align}
+Q_\pi(s,a) &= \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]\\
+&=  R_{t+1} + \sum_{s' \in S, a' \in A} \gamma P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q_\pi(s',a').
+\end{align}
+This property is known as the Bellman equation \cite{sutton2018reinforcement} and it gives us the opportunity to verify the quality of our action-value estimates in an aspect that is different from what we did so far. If our approximation is indeed an action-value function, we expect it to (at least approximately) agree with the Bellman equation in addition to minimizing the loss function against the training data.\\\\
+In our context we use a discount factor of $\gamma = 1$ and rewards only occur at episode-ending states. If $s$ is not a terminal state, $R_{t+1} = 0$ and the Bellman equation becomes
+\begin{equation}
+Q(s,a) = \sum_{s',a'} P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q(s',a').
+\label{eq:markov_diff}
+\end{equation}
+Assuming we've computed an action-value function estimate for all the states in our dataset, we can proceed to verify this equality using the data, since the transition probability $P$ can be estimated by counting occurrences of states in the dataset (denoted by $c$) as
+$$P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) = \frac{c(S_{t+1} = s', A_{t+1} = a', S_t = s, A_t = a)}{c(s,a)}.$$
+Furthermore, since the state space is large, we wish to avoid examining a single state due to potential data sparsity effects. We will instead be interested in a set of state-action pairs $X$, summing all the corresponding state-action values as they appear in the dataset, namely the quantity:
+$$\sum_{s,a\in X} c(s,a)Q(s,a).$$
+Using \eqref{eq:markov_diff}, we obtain the right hand side:
+\begin{equation}
+\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} c(s,a)\sum_{s',a'\in S\times A} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a'),
+\end{equation}
+which simplifies to
+\begin{equation}
+\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a').
+\label{eq:markov_num}
+\end{equation}
+This final form is the one we use to compute the Bellman equation agreement, since both the left and right hand sides can be computed in a simple loop over the dataset sequences. We are interested in how much our action-value estimates violate \eqref{eq:markov_num}, i.e. the quantity
+\begin{equation}
+e_X = |\sum_{s,a\in X} c(s,a)Q(s,a) - \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a') |.
+\label{eq:markov_num2}
+\end{equation}
+We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.
+
+\section{Action Impact}
+
+One of the motivations of computing the action-value function for sports data is the ability to numerically rank teams and players according to their action values. To achieve this, we need to consider that the context of an action performed by a player influences the quality of their actions. Namely, scoring a point from a favorable situation (eg. a successful attack following a perfect pass) should be treated differently than scoring in a situation that is deemed difficult. This leads us to the notion of action impact.\\\\
+As discussed in \cite{routley2015markov}, there are several options of how we could choose to value actions. We will adopt the difference of consecutive action values as a measure of impact. Namely, for a transition from state $s$ to $s'$, with actions $a$ and $a'$ we define:
+\begin{equation}
+\text{impact}(s_t,a_t) = Q(s_t,a_t) - Q(s_{t-1},a_{t-1}).
+\end{equation}
+This allows us to capture to some degree how the flow of the game changed when action $a$ was performed. This version of valuing player actions was also used in the hockey context in \cite{liu2018deep}.
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -210,7 +248,7 @@ By default, only works cited in the text will be added to the bibliography~\cite
 \backmatter%
 	\addtoToC{Bibliography}
 	\bibliographystyle{plain}
-	\bibliography{references}
+	\bibliography{msc_report}
 
 \begin{appendices} % optional
 	\chapter{Code}
