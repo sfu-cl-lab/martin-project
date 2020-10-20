@@ -185,9 +185,9 @@
 
 \mainmatter%
 
-\chapter{Introduction}
+%\chapter{Introduction}
 
-By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
+%By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
 
 \chapter{Results}
 
@@ -222,16 +222,72 @@ This final form is the one we use to compute the Bellman equation agreement, sin
 e_X = |\sum_{s,a\in X} c(s,a)Q(s,a) - \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a') |.
 \label{eq:markov_num2}
 \end{equation}
-We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.
+We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.\\\\
+Looking at the $e_X$ values shown in Table \ref{tab:bellman-agreement}, the neural network exhibits overall highest agreement with the Bellman equation and the single decision tree is the worst of our models in this respect. Since the neural network is trained using reinforcement learning principles, in particular because the loss function incorporates the temporal difference target 
+$$Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma Q(s', a') - Q(s,a)),$$
+where the state-action pair $(s,a)$ is followed by $(s',a')$ in the data, it is not surprising that temporal consistency is best maintained using this model. Decision tree and random forest models are trained under the assumption of independent data and do not incorporate any information about the sequential nature of the volleyball data. Their $e_X$ values are accordingly much larger and in the case of random forest could outweigh its lower mean squared error compared to the neural network. The mimic tree's $e_X$ seems to be close to the neural network's in most cases, but significantly higher for attack and block actions, which puts it somewhere between the neural network and the random forest overall.
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{c|cccccc}
+		\textbf{Model}    & \textbf{Serve} & \textbf{Receive} & \textbf{Attack} & \textbf{Set} & \textbf{Block} & \textbf{Dig} \\ \hline
+		Decision Tree     & 0.0158                  & 0.0151                    & 0.0376                   & 0.0074                & 0.0641                  & 0.0662                \\
+		Random Forest     & 0.0172                  & 0.0183                    & 0.0075                   & 0.0066                & 0.0025                  & 0.0148                \\
+		RL Neural Network & 0.0001                  & 0.0005                    & 0.0003                   & 0.0019                & 0.0008                  & 0.0002                \\
+		Mimic Tree        & 0.0001                  & 0.0001                    & 0.0076                   & 0.0018                & 0.0125                  & 0.0009               
+	\end{tabular}
+	\caption{Table of Bellman equation agreement error $e_X$ for various sets of non-terminal states $X$. For each volleyball action type (columns), the set $X$ includes actions performed by the home team with a non-terminal outcome.}
+	\label{tab:bellman-agreement}
+\end{table}
 
 \section{Action Impact}
 
 One of the motivations of computing the action-value function for sports data is the ability to numerically rank teams and players according to their action values. To achieve this, we need to consider that the context of an action performed by a player influences the quality of their actions. Namely, scoring a point from a favorable situation (eg. a successful attack following a perfect pass) should be treated differently than scoring in a situation that is deemed difficult. This leads us to the notion of action impact.\\\\
-As discussed in \cite{routley2015markov}, there are several options of how we could choose to value actions. We will adopt the difference of consecutive action values as a measure of impact. Namely, for a transition from state $s$ to $s'$, with actions $a$ and $a'$ we define:
+As discussed in \cite{routley2015markov}, there are several options of how we could choose to value actions. We will adopt the difference of consecutive action values as a measure of impact. Namely, for a transition from state $s_{t-1}$ to $s_t$, with actions $a_{t-1}$ and $a_t$ we define the impact of $(s_t, a_t)$ as:
 \begin{equation}
 \text{impact}(s_t,a_t) = Q(s_t,a_t) - Q(s_{t-1},a_{t-1}).
+\label{eq:action_impact}
 \end{equation}
-This allows us to capture to some degree how the flow of the game changed when action $a$ was performed. This version of valuing player actions was also used in the hockey context in \cite{liu2018deep}.
+This allows us to capture to some degree how the flow of the game changed when action $a_t$ was performed. This version of valuing player actions was successfully used in the hockey context in \cite{liu2018deep} for player evaluations.\\\\
+Firstly, we consider team collective action impact and investigate how well it aligns with team performance in the Canada West volleyball competition in the last three seasons (2018, 2019 and 2020). To do this, we compute the mean impact of all actions performed by players of a particular team using equation \eqref{eq:action_impact}.\\\\
+Note that since action impact relates to the values of both current and previous states, we need to find a treatment for the first action of any episode (in volleyball this is always a serve action), where $s_{t-1}$ and $a_{t-1}$ are not defined. The most obvious solution is to use an initial state-action value of 0, but since the serving team is generally at a disadvantage in terms of scoring probability, this approach gives serve actions a negative value on average and renders serve values disproportionate when compared to other action types. We therefore proceed as follows. Define $Q_H$ to be the mean value of all home serve actions and $Q_A$ to be the mean value of all away serve actions. We then use these values to compute action impacts as:
+\begin{equation}
+\text{impact}(s_t,a_t) =
+	\begin{cases} 
+	Q(s_t,a_t) - Q_H & \text{if } a_t \text{ is home serve,} \\
+	Q(s_t,a_t) - Q_A & \text{if } a_t \text{ is away serve,} \\
+	Q(s_t,a_t) - Q(s_{t-1},a_{t-1}) & \text{otherwise.} 
+	\end{cases}
+	\label{eq:action_impact2}
+\end{equation}
+The intuition behind this approach is to have the serve impact measure the difference between the current serve and the average serve. We also know the home team tends to have a slight advantage, which is the reason for separate averaging of home and away serves. The two means, $Q_H$ and $Q_A$ do in fact differ in absolute value by about 0.06 in favour of the home team.
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{cccccc}
+		\textbf{Team}   & \textbf{Mean Action Impact} & \textbf{R20} & \textbf{R19} & \textbf{R18} & \textbf{Mean Ranking} \\ \hline
+		Trinity Western & 0.0220                      & 1            & 2            & 1            & 1.33                  \\
+		Alberta         & 0.0175                      & 2            & 3            & 3            & 2.67                  \\
+		UBC             & 0.0124                      & 3            & 7            & 2            & 4.00                  \\
+		Brandon         & 0.0077                      & 4            & 1            & 4            & 3.00                  \\
+		Calgary         & 0.0073                      & 5            & 8            & 6            & 6.33                  \\
+		Winnipeg        & 0.0053                      & 6            & 10           & 5            & 7.00                  \\
+		Mount Royal     & -0.0053                     & 8            & 4            & 10           & 7.33                  \\
+		Manitoba        & -0.0067                     & 10           & 9            & 7            & 8.67                  \\
+		MacEwan         & -0.0128                     & 12           & 11           & 12           & 11.67                 \\
+		Thompson Rivers & -0.0144                     & 9            & 6            & 8            & 7.67                  \\
+		Saskatchewan    & -0.0210                     & 7            & 5            & 9            & 7.00                  \\
+		UBCO            & -0.0235                     & 11           & 12           & 11           & 11.33                
+	\end{tabular}
+	\caption{Canada West teams sorted by mean action impact. Columns R20, R19, R18 are team rankings after regular season in 2020, 2019 and 2018, respectively and Mean Ranking is the mean of those three columns.}
+	\label{tab:team-impact}
+\end{table}
+
+\begin{figure}
+	\includegraphics[scale=0.55]{img/team_ranking.pdf}
+	\caption{Team mean ranking plotted against mean action impact for Canada West participating teams, see Table \ref{tab:team-impact} for values shown in this graph.}
+	\label{fig:team-impact}
+\end{figure}
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %

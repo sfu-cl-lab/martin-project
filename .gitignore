@@ -1,2 +1,9 @@
 /notes
 output
+/output_retry*
+/notebook/.ipynb_checkpoints
+/notebook/nn_code/__pycache__
+/lab_update.pptx
+/data/vb_data_3_numZone_semicol.csv
+/data/vb_data_3_categZone_semicol.csv
+/data/Q_shot_2019_10_16_10_01_11_tiny.csv
