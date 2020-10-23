@@ -26,29 +26,27 @@
 %   Fill in the following information for the title page and approval page.
 %
 
-\title{An example of a thesis or dissertation on the subject of your degree}
+\title{Learning State-Action Value Functions for Volleyball Data}
 \thesistype{Thesis}
-\author{Stuart Arthur Dent}
+\author{Martin Ambrozic}
 \previousdegrees{%
-	M.Sc., Wossamotta University, 1963\\
-	B.Sc., Unseen University, 1836}
-\degree{Doctor of Philosophy}
-\discipline{Mathematics}
-\department{Department of Inadvisably Applied Mathematics}
-\faculty{Faculty of Mad Science}
-\copyrightyear{2017}
-\semester{Spring 2017}
-\date{January 10, 2017}
+	M.Sc., Delft Technical University, 2013\\
+	B.Sc., University of Ljubljana, 2011}
+\degree{Master of Science}
+\discipline{Computing Science}
+\department{Department of Computing Science}
+\faculty{Faculty of Applied Science}
+\copyrightyear{2020}
+\semester{Fall 2020}
+\date{December 20, 2020}
 
-\keywords{thesis template; Simon Fraser University; time travel paradoxes}
+\keywords{}
 
 \committee{%
-	\chair{Pamela Isely}{Professor}
-	\member{Emmett Brown}{Senior Supervisor\\Professor}
-	\member{Bonnibel Bubblegum}{Supervisor\\Associate Professor}
-	\member{James Moriarty}{Supervisor\\Adjunct Professor}
-	\member{Kaylee Frye}{Internal Examiner\\Assistant Professor\\School of Engineering Science}
-	\member{Hubert J.\ Farnsworth}{External Examiner\\Professor\\Department of Quantum Fields\\Mars University}
+	\chair{Chair}{Professor}
+	\member{Oliver Schulte}{Senior Supervisor\\Professor}
+	\member{Mo Chen}{Internal Examiner\\Assistant Professor\\School of Computing Science}
+	\member{Steven Ruuth}{External Examiner\\Professor\\Department of Mathematics}
 }
 
 
@@ -190,11 +188,14 @@
 
 %By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
 
+%\chapter{Dataset Overview}
+
 \chapter{Results}
 
 \section{Comparing Action Values between models}
 
-We compare action values computed by the different models for the home team, including all possible action types and outcomes. Table \ref{tab:qvalues} contains mean values of $Q(s,a)$ over all state-action pairs where the action type and outcome for $a$ are fixed. Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the correct values, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
+We compare action values computed by the different models for the home and away team, including all possible action types and outcomes. Tables \ref{tab:qvalues_home} and \ref{tab:qvalues_away} contain mean values of $Q(s,a)$ over all state-action pairs where the action type and outcome for $a$ are fixed, separately for the home team and away team, respectively.\\\\
+Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, home values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the correct values, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The same can be observed for the '!' and '+' outcomes of the away receive action. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
 
 \begin{table}[]
 	\centering
@@ -229,7 +230,43 @@ We compare action values computed by the different models for the home team, inc
 		& \multicolumn{1}{c|}{+}                & 0.364              & 0.375                 & 0.371                & \multicolumn{1}{c|}{0.371}               & 0.372        
 	\end{tabular}
 	\caption{Comparison of action values computed by different models. Values shown are mean state-action values $Q(s,a)$, where the action type (skill) and outcome are specified in the table. Negative values correspond to the away team having a higher probability of winning the rally. Additionally, the Data column contains expected rewards computed directly from the dataset samples.}
-	\label{tab:qvalues}
+	\label{tab:qvalues_home}
+\end{table}
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{ccccccc}
+		\multicolumn{7}{c}{\textbf{Away Action Values}}                                                                                                                                       \\
+		\textbf{Skill} & \multicolumn{1}{c|}{\textbf{Outcome}} & \textbf{Dec. Tree} & \textbf{Rand. Forest} & \textbf{Neural Net.} & \multicolumn{1}{c|}{\textbf{Mimic Tree}} & \textbf{Data} \\ \hline
+		S              & \multicolumn{1}{c|}{=}                & 1                  & 1                     & 0.999                & \multicolumn{1}{c|}{0.999}               & 1             \\
+		& \multicolumn{1}{c|}{-}                & 0.362              & 0.351                 & 0.364                & \multicolumn{1}{c|}{0.364}               & 0.362         \\
+		& \multicolumn{1}{c|}{!}                & 0.107              & 0.11                  & 0.11                 & \multicolumn{1}{c|}{0.11}                & 0.118         \\
+		& \multicolumn{1}{c|}{+}                & -0.166             & -0.167                & -0.157               & \multicolumn{1}{c|}{-0.158}              & -0.167        \\
+		& \multicolumn{1}{c|}{\#}               & -1                 & -1                    & -0.998               & \multicolumn{1}{c|}{-0.997}              & -1            \\ \hline
+		R              & \multicolumn{1}{c|}{=}                & 1                  & 1                     & 0.998                & \multicolumn{1}{c|}{0.998}               & 1             \\
+		& \multicolumn{1}{c|}{-}                & 0.239              & 0.239                 & 0.225                & \multicolumn{1}{c|}{0.225}               & 0.238         \\
+		& \multicolumn{1}{c|}{!}                & -0.185             & -0.097                & -0.101               & \multicolumn{1}{c|}{-0.1}                & -0.106        \\
+		& \multicolumn{1}{c|}{+}                & -0.185             & -0.251                & -0.252               & \multicolumn{1}{c|}{-0.252}              & -0.256        \\
+		& \multicolumn{1}{c|}{\#}               & -0.369             & -0.368                & -0.373               & \multicolumn{1}{c|}{-0.373}              & -0.369        \\ \hline
+		A              & \multicolumn{1}{c|}{=}                & 0.986              & 0.987                 & 0.994                & \multicolumn{1}{c|}{0.986}               & 1             \\
+		& \multicolumn{1}{c|}{/}                & 0.927              & 0.965                 & 0.993                & \multicolumn{1}{c|}{0.99}                & 1             \\
+		& \multicolumn{1}{c|}{-}                & 0.114              & 0.151                 & 0.155                & \multicolumn{1}{c|}{0.156}               & 0.153         \\
+		& \multicolumn{1}{c|}{!}                & 0.091              & 0.103                 & 0.067                & \multicolumn{1}{c|}{0.072}               & 0.051         \\
+		& \multicolumn{1}{c|}{+}                & -0.204             & -0.206                & -0.287               & \multicolumn{1}{c|}{-0.275}              & -0.277        \\
+		& \multicolumn{1}{c|}{\#}               & -0.998             & -0.992                & -0.994               & \multicolumn{1}{c|}{-0.993}              & -1            \\ \hline
+		B              & \multicolumn{1}{c|}{=}                & 0.951              & 0.969                 & 0.992                & \multicolumn{1}{c|}{0.991}               & 1             \\
+		& \multicolumn{1}{c|}{-}                & 0.999              & 1                     & 0.994                & \multicolumn{1}{c|}{0.994}               & 1             \\
+		& \multicolumn{1}{c|}{!}                & 0.116              & 0.109                 & 0.123                & \multicolumn{1}{c|}{0.119}               & 0.127         \\
+		& \multicolumn{1}{c|}{+}                & -0.052             & -0.07                 & -0.072               & \multicolumn{1}{c|}{-0.071}              &               \\
+		& \multicolumn{1}{c|}{\#}               & -1                 & -0.999                & -0.993               & \multicolumn{1}{c|}{-0.993}              & -1            \\ \hline
+		D              & \multicolumn{1}{c|}{=}                & 1                  & 1                     & 0.995                & \multicolumn{1}{c|}{0.995}               & 1             \\
+		& \multicolumn{1}{c|}{!}                & 0.37               & 0.363                 & 0.377                & \multicolumn{1}{c|}{0.378}               & 0.371         \\
+		& \multicolumn{1}{c|}{\#}               & -0.069             & -0.071                & -0.064               & \multicolumn{1}{c|}{-0.064}              & -0.062        \\ \hline
+		E              & \multicolumn{1}{c|}{=}                & 0.971              & 0.987                 & 0.993                & \multicolumn{1}{c|}{0.989}               & 1             \\
+		& \multicolumn{1}{c|}{+}                & -0.281             & -0.287                & -0.283               & \multicolumn{1}{c|}{-0.284}              & -0.281       
+	\end{tabular}
+	\caption{Comparison of away action values computed by different models. See table \ref{tab:qvalues_home}}.
+	\label{tab:qvalues_away}
 \end{table}
 
 \section{Verifying Bellman Equation Agreement}
