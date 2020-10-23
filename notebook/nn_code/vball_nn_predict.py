@@ -17,7 +17,7 @@ THRESHOLD = 0.0001 #0.0001
 BATCH_SIZE = 32 #32
 GAMMA = 1
 
-SAVE_DIR = 'C:/projects/msc-project/output_retry_15'
+SAVE_DIR = 'C:/projects/msc-project/output_retry_16'
 DATA_FILE = 'C:/projects/msc-project/data/vb_data_3_numZone.csv'
 
 

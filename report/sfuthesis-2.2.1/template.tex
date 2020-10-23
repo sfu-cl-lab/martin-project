@@ -194,21 +194,42 @@
 
 \section{Comparing Action Values between models}
 
-We compare action values computed by the different models of the home serve action for all possible outcomes. Note that there is no inherent order in the outcome symbols, the values for the different outcomes are entirely learned by the models.
+We compare action values computed by the different models for the home team, including all possible action types and outcomes. Table \ref{tab:qvalues} contains mean values of $Q(s,a)$ over all state-action pairs where the action type and outcome for $a$ are fixed. Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the correct values, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
 
 \begin{table}[]
 	\centering
-	\begin{tabular}{c|ccccc}
-		\multirow{2}{*}{\textbf{Serve Outcome}} & \multicolumn{5}{c}{\textbf{Home Win Probability}}                                                            \\
-		& \textbf{Dec. Tree} & \textbf{Rand. Forest} & \textbf{Neural Net.} & \textbf{Mimic Tree} & \textbf{From Data} \\ \hline
-		\textbf{=}                              & 0                  & 0                     & 0.1                  & 0.1                 & 0                  \\
-		\textbf{-}                              & 35.4               & 35.4                  & 35.5                 & 35.5                & 35.4               \\
-		\textbf{!}                              & 55.2               & 50.6                  & 44.9                 & 44.9                & 44.7               \\
-		\textbf{+}                              & 55.2               & 62.3                  & 61.2                 & 61.2                & 61.9               \\
-		\textbf{\#}                             & 100                & 100                   & 99.9                 & 99.9                & 100               
+	\begin{tabular}{ccccccc}
+		\multicolumn{7}{c}{\textbf{Home Action Values}} \\
+		\textbf{Skill} & \multicolumn{1}{c|}{\textbf{Outcome}} & \textbf{Dec. Tree} & \textbf{Rand. Forest} & \textbf{Neural Net.} & \multicolumn{1}{c|}{\textbf{Mimic Tree}} & \textbf{Data} \\ \hline
+		S              & \multicolumn{1}{c|}{=}                & -1                 & -1                    & -0.998               & \multicolumn{1}{c|}{-0.998}              & -1            \\
+		& \multicolumn{1}{c|}{-}                & -0.293             & -0.291                & -0.29                & \multicolumn{1}{c|}{-0.29}               & -0.293        \\
+		& \multicolumn{1}{c|}{!}                & 0.103              & 0.011                 & -0.101               & \multicolumn{1}{c|}{-0.101}              & -0.106        \\
+		& \multicolumn{1}{c|}{+}                & 0.103              & 0.246                 & 0.225                & \multicolumn{1}{c|}{0.225}               & 0.238         \\
+		& \multicolumn{1}{c|}{\#}               & 1                  & 1                     & 0.997                & \multicolumn{1}{c|}{0.998}               & 1             \\ \hline
+		R              & \multicolumn{1}{c|}{=}                & -1                 & -1                    & -0.998               & \multicolumn{1}{c|}{-0.998}              & -1            \\
+		& \multicolumn{1}{c|}{-}                & -0.167             & -0.167                & -0.157               & \multicolumn{1}{c|}{-0.157}              & -0.166        \\
+		& \multicolumn{1}{c|}{!}                & 0.104              & 0.039                 & 0.11                 & \multicolumn{1}{c|}{0.108}               & 0.118         \\
+		& \multicolumn{1}{c|}{+}                & 0.287              & 0.323                 & 0.325                & \multicolumn{1}{c|}{0.325}               & 0.321         \\
+		& \multicolumn{1}{c|}{\#}               & 0.437              & 0.427                 & 0.446                & \multicolumn{1}{c|}{0.446}               & 0.446         \\ \hline
+		A              & \multicolumn{1}{c|}{=}                & -0.991             & -0.987                & -0.994               & \multicolumn{1}{c|}{-0.993}              & -1            \\
+		& \multicolumn{1}{c|}{/}                & -0.984             & -0.968                & -0.993               & \multicolumn{1}{c|}{-0.986}              & -1            \\
+		& \multicolumn{1}{c|}{-}                & 0.02               & -0.052                & -0.072               & \multicolumn{1}{c|}{-0.072}              & -0.071        \\
+		& \multicolumn{1}{c|}{!}                & 0.107              & 0.082                 & 0.122                & \multicolumn{1}{c|}{0.117}               & 0.127         \\
+		& \multicolumn{1}{c|}{+}                & 0.302              & 0.284                 & 0.372                & \multicolumn{1}{c|}{0.368}               & 0.362         \\
+		& \multicolumn{1}{c|}{\#}               & 0.947              & 0.99                  & 0.994                & \multicolumn{1}{c|}{0.994}               & 1             \\ \hline
+		B              & \multicolumn{1}{c|}{=}                & -0.87              & -0.969                & -0.99                & \multicolumn{1}{c|}{-0.961}              & -1            \\
+		& \multicolumn{1}{c|}{-}                & -1                 & -1                    & -0.993               & \multicolumn{1}{c|}{-0.993}              & -1            \\
+		& \multicolumn{1}{c|}{!}                & 0.103              & 0.209                 & 0.063                & \multicolumn{1}{c|}{0.071}               & 0.052         \\
+		& \multicolumn{1}{c|}{+}                & 0.218              & 0.154                 & 0.146                & \multicolumn{1}{c|}{0.145}               & 0.142         \\
+		& \multicolumn{1}{c|}{\#}               & 0.999              & 1                     & 0.993                & \multicolumn{1}{c|}{0.993}               & 1             \\ \hline
+		D              & \multicolumn{1}{c|}{=}                & -1                 & -1                    & -0.995               & \multicolumn{1}{c|}{-0.995}              & -1            \\
+		& \multicolumn{1}{c|}{!}                & -0.289             & -0.262                & -0.278               & \multicolumn{1}{c|}{-0.275}              & -0.282        \\
+		& \multicolumn{1}{c|}{\#}               & 0.217              & 0.152                 & 0.155                & \multicolumn{1}{c|}{0.155}               & 0.147         \\ \hline
+		E              & \multicolumn{1}{c|}{=}                & -0.941             & -0.986                & -0.994               & \multicolumn{1}{c|}{-0.989}              & -1            \\
+		& \multicolumn{1}{c|}{+}                & 0.364              & 0.375                 & 0.371                & \multicolumn{1}{c|}{0.371}               & 0.372        
 	\end{tabular}
-	\caption{Mean home win probabilities (in percent) for the home serve action type broken down by outcome. Comparison between different models and win probability obtained from dataset.}
-	\label{tab:serve-values}
+	\caption{Comparison of action values computed by different models. Values shown are mean state-action values $Q(s,a)$, where the action type (skill) and outcome are specified in the table. Negative values correspond to the away team having a higher probability of winning the rally. Additionally, the Data column contains expected rewards computed directly from the dataset samples.}
+	\label{tab:qvalues}
 \end{table}
 
 \section{Verifying Bellman Equation Agreement}

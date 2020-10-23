@@ -1,0 +1,36 @@
+\documentclass[12pt,letter]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[toc,page]{appendix}
+\author{Martin Ambrozic}
+\title{Notes on State-Action Space for Volleyball}
+\date{}
+
+\newcommand{\bb}[1]{\mathbf{#1}}
+
+\def\Xint#1{\mathchoice
+	{\XXint\displaystyle\textstyle{#1}}%
+	{\XXint\textstyle\scriptstyle{#1}}%
+	{\XXint\scriptstyle\scriptscriptstyle{#1}}%
+	{\XXint\scriptscriptstyle\scriptscriptstyle{#1}}%
+	\!\int}
+\def\XXint#1#2#3{{\setbox0=\hbox{$#1{#2#3}{\int}$ }
+		\vcenter{\hbox{$#2#3$ }}\kern-.6\wd0}}
+\def\ddashint{\Xint=}
+\def\dashint{\Xint-}
+
+\begin{document}
+	
+$$Q(s,a) = \mathbb{E}\left[r|s,a\right]$$\\\\
+
+$$Q(s,a) = r(s,a) + \gamma \mathbb{E}[Q(s',a')|s,a]$$
+$$Q(s,a) = \sum_{s',a'} p(s',a'|s,a)Q(s',a')$$
+$$Q(s,a) = \sum_{s',a'} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a')$$
+\\\\
+$$\sum_{s,a\in X} Q(s,a) = \sum_{s,a\in X} \sum_{s',a'} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a')$$
+$$\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} c(s,a)\sum_{s',a'} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a')$$	
+$$\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} \sum_{s',a'} c(s',a',s,a) Q(s',a')$$
+\end{document}}

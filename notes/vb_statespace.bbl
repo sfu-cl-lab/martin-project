@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+
+\bibitem{routley2015markov}
+K.~D. Routley, ``A markov game model for valuing player actions in ice
+  hockey,'' Master's thesis, Applied Sciences:, 2015.
+
+\bibitem{schulte2017apples}
+O.~Schulte, Z.~Zhao, M.~Javan, and P.~Desaulniers, ``Apples-to-apples:
+  Clustering and ranking nhl players using location information and scoring
+  impact,'' in {\em Proceedings of the MIT Sloan Sports Analytics Conference},
+  2017.
+
+\bibitem{schulte2017markov}
+O.~Schulte, M.~Khademi, S.~Gholami, Z.~Zhao, M.~Javan, and P.~Desaulniers, ``A
+  markov game model for valuing actions, locations, and team performance in ice
+  hockey,'' {\em Data Mining and Knowledge Discovery}, vol.~31, no.~6,
+  pp.~1735--1757, 2017.
+
+\bibitem{florence2008skill}
+L.~W. Florence, G.~W. Fellingham, P.~R. Vehrs, and N.~P. Mortensen, ``Skill
+  evaluation in women's volleyball,'' {\em Journal of Quantitative Analysis in
+  Sports}, vol.~4, no.~2, 2008.
+
+\bibitem{miskin2010skill}
+M.~A. Miskin, G.~W. Fellingham, and L.~W. Florence, ``Skill importance in
+  women's volleyball,'' {\em Journal of Quantitative Analysis in Sports},
+  vol.~6, no.~2, 2010.
+
+\end{thebibliography}

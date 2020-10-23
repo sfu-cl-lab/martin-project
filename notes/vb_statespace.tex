@@ -1,0 +1,91 @@
+\documentclass[12pt,letter]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[toc,page]{appendix}
+\author{Martin Ambrozic}
+\title{Notes on State-Action Space for Volleyball}
+\date{}
+
+\newcommand{\bb}[1]{\mathbf{#1}}
+
+\def\Xint#1{\mathchoice
+	{\XXint\displaystyle\textstyle{#1}}%
+	{\XXint\textstyle\scriptstyle{#1}}%
+	{\XXint\scriptstyle\scriptscriptstyle{#1}}%
+	{\XXint\scriptscriptstyle\scriptscriptstyle{#1}}%
+	\!\int}
+\def\XXint#1#2#3{{\setbox0=\hbox{$#1{#2#3}{\int}$ }
+		\vcenter{\hbox{$#2#3$ }}\kern-.6\wd0}}
+\def\ddashint{\Xint=}
+\def\dashint{\Xint-}
+
+\begin{document}
+	
+	\maketitle
+	
+	\subsection*{Inspiration from NHL work}
+	
+	From the work of Schulte, Routley, and others applying to NHL data \cite{routley2015markov, schulte2017apples, schulte2017markov}, a set of context features is defined to describe the current state of the game, namely:
+	\begin{itemize}
+		\item goal differential (integer values between -8 and 8)
+		\item manpower differential (3 possible values)
+		\item current period (integer values between 1 and 4).
+	\end{itemize}
+	This gives 204 possible states.
+	\\\\
+	Actions are described in terms of 13 general action types, augmented with the region in which the action took place. This gives 63 action-region pairs for the home and away team for a total of 126 possible actions.
+	
+	
+	\subsection*{Previous Markov Models for Volleyball}
+	
+	There has been previous work using Markov models in Volleyball, most notably \cite{florence2008skill} and \cite{miskin2010skill}. Those models are based on the same kind of data we have and typically represent the state space in terms of action and outcome, e.g. the state "negative serve" is followed by the state "positive receive" etc. However, they do not include context and mostly only consider actions by BYU and not the opposing team.
+	
+	\subsection*{Volleyball Context}
+	
+	Context in a volleyball game should include current score information. Since sets are scored up to 25 (with the exception of 5th set, which is up to 15), this gives over 600 possible score states. Intuitively, the two score components that influence play are the difference in scores (close game vs. one team ahead) and the amount of progression toward the end of the current set (rallies close to the end of the set could be more important).\\\\
+	We could consider a combination of score differential and current higher score (e.g. a score of 10-9 would correspond to a score differential of 1 and a higher score of 10). This would also allow for dimensionality reduction by considering score differentials only in a certain range (say, between +4 and -4) and consider higher differentials as equivalent. The higher score value could also be clustered to values of eg. "less than 10", "between 10 and 20" and "over 20" to further reduce state space.\\\\
+	Corresponding to the period in hockey, the current set number could be included, but this would increase the state space by a factor of 5.\\\\
+	From a team's perspective, rallies are distinct as either side-out (team serving) or point-score (team receiving opponent serve). The flag of "home serving" vs "away serving" could thus also be included.\\\\
+	This set-up would result in anywhere between 27 and several thousand states.
+
+	\subsection*{Volleyball Actions}
+	
+	Our data consists of 7 basic action types, each with additional information, such as outcome, trajectory and further notes on the action execution. Following the NHL example, location could be included for something like the following action list:
+	\begin{itemize}
+		\item serve: 2 types (spin/float), 3 locations = 6 combinations
+		\item receive: 6 locations
+		\item set: 8 locations
+		\item attack: 5 locations
+		\item block: 3 locations
+		\item dig: 5 locations
+		\item free ball: 1 location
+	\end{itemize}
+	This results in 34 actions per team = 68 actions in total. There are further details in the data that could be used, but would expand the action space.
+	\\\\
+	Alternatively, using outcomes:
+	\begin{itemize}
+		\item serve: 8 pass outcomes + error = 9 outcomes (2 trivial)
+		\item receive: 8 outcomes (1 trivial)
+		\item set: 2 outcomes
+		\item attack: 5 locations, 6 outcomes (3 trivial) = 30 combinations (15 trivial)
+		\item block: 4 outcomes (2 trivial)
+		\item dig: 2 outcomes (1 trivial)
+		\item free ball: ignore, 0 outcomes
+	\end{itemize}
+	This results in 55 actions per team = 110 actions in total.
+	
+	\subsection*{State-Action Space Size Considerations}
+	
+	Since the objective is to compute a value function on the state-action space, the ratio between the number of data events and the size of the state-action space needs to be considered. The NHL dataset used in \cite{routley2015markov, schulte2017apples, schulte2017markov} is very large, containing several million events. Our data would contain roughly 160K events, therefore the state-action space cannot be quite as large in order to obtain reliable results. The most compact representation described above would result in 27x68=1836 state-action pairs, which corresponds to an average of about 90 events per state-action combination.
+	\\\\
+	In the case of using outcomes, 27x110=2970 state-action pairs, about 55 events per state-action pair.
+	
+	
+	\newpage
+	\bibliography{references}
+	\bibliographystyle{ieeetr}
+	
+\end{document}
