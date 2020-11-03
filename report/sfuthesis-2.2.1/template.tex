@@ -44,7 +44,7 @@
 
 \committee{%
 	\chair{Chair}{Professor}
-	\member{Oliver Schulte}{Senior Supervisor\\Professor}
+	\member{Oliver Schulte}{Senior Supervisor\\Professor\\School of Computing Science}
 	\member{Mo Chen}{Internal Examiner\\Assistant Professor\\School of Computing Science}
 	\member{Steven Ruuth}{External Examiner\\Professor\\Department of Mathematics}
 }
@@ -189,7 +189,7 @@
 	
 	%By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
 	
-	\chapter{Dataset and Modelling}
+	\chapter{Dataset and the Markov Decision Process}
 	
 	\section{Dataset Description}
 	The volleyball dataset was collected in collaboration with the University of British Columbia's men's volleyball programme. The UBC Thunderbirds compete in the Canada West division of U-Sports volleyball, which is the highest level of volleyball university competition in Canada. Their regular season consists of a double round robin phase, where they play each of the other Canada West teams twice, and a play-off phase, where top seeded teams play a single elimination bracket to determine the conference champion as well as participants in the U-Sports national final tournament. During the data collection time window, 12 teams participated in the Canada West competition, except in 2017/2018, where 13 teams competed.\\\\
@@ -227,10 +227,173 @@
 		\caption{Summary of fields in the volleyball dataset. Action-related fields on top, context-related fields on the bottom.}
 		\label{tab:data-fields}
 	\end{table}
+
+	\section{The Markov Decision Process}
+	\label{section-mdp}
+	
+	In volleyball, a rally is a sequence of actions beginning with the serve and ending with one of the teams scoring a point. We model every rally as a sequence of states and actions of a Markov Decision Process (abbreviated as MDP). We incorporate context and history in the state space similar to \cite{schulte2017markov}.\\\\
+	In determining the extent of action history to include, we consider the distribution of rally lengths (in terms of the number of actions). Figure \ref{fig:rally-lengths} shows a histogram of rally lengths found in the dataset. We adopt a maximum history window of 9 actions, which means 96\% of all rallies are encompassed in full from their beginning.\\
+	\begin{figure}
+		\includegraphics[scale=0.5]{img/rally_lengths.pdf}
+		\caption{Rally length histogram for the volleyball dataset.}
+		\label{fig:rally-lengths}
+	\end{figure}
+	\\
+	Every rally corresponds to a walk through the states of the MDP, where the action taken by either team determines the next state. Eventually one of the teams wins the point and the walk terminates. We model this by a reward function $r: S \times A \rightarrow \mathbb{Z}$, where $S$ is the state space, $A$ is the action space and
+	\begin{equation}
+		r(s,a) =
+		\begin{cases} 
+			1 & \text{if home team wins the rally} \\
+			-1 & \text{if away team wins the rally} \\
+			0 & \text{otherwise.} 
+		\end{cases}
+		\label{eq:reward_function}
+	\end{equation}
+	We denote the reward value at step $t$ of the walk as $r_t$. In this setting, our quantity of interest is the state-action value function, also commonly called the Q function \cite{sutton2018reinforcement}. It expresses the expected future reward given the current state and action at step $k$, assuming future actions follow policy $\pi$:
+	\begin{equation}
+		Q_\pi(s,a) = \mathbb{E} \left[ \sum_{t \ge k} \gamma^{t-k} r_{t} \ | \ s_k = s, a_k = a \right]\\
+		\label{eq:qfunction}
+	\end{equation}
+	Often in reinforcement learning applications, the objective is to compute the optimal policy $\pi^*$. This is not the case in this context, as the objective is only to evaluate the policy observed in the data. We  thus omit the subscript $\pi$ from here on. We also use a discounting factor of $\gamma=1$ and omit it as well.
+		
+	
+	\chapter{Models}
+	
+	\section{Temporally Independent Models}
+	
+	We first consider models that treat data samples as independent. The Q function gives the expected future reward in an episode starting from a given state-action pair by equation \eqref{eq:qfunction}. We can formulate this as a regression problem, where the target value $R(s,a)$ for each sample in the training data is $1$ or $-1$, depending on which team eventually won the rally. If we train a function estimator $Q'$ that minimizes the mean squared error
+	\begin{equation}
+		\frac{1}{|X|}\sum_{x \in X} (Q'(x) - R(x))^2,
+		\label{eq:mse}
+	\end{equation}
+	then $Q'(s,a)$ will approximate the conditional expected value
+	$$\mathbb{E} \left[R \, | \, x \right].$$
+	See \cite{bishop2006pattern} for a derivation of this property. In other words, since $x$ is a state-action pair sample and $R(x)$ is the eventual reward, $Q'(x)$ will approximate the Q function. We now consider specific models that follow this approach.
+	
+	\subsection{Decision Tree}
+	
+	Decision trees are an appealing model because they offer interpretable function approximation modelled as a sequence of simple decisions. We used a regression tree class from the Python scikit-learn package. Due to categorical fields in the dataset, a pre-processing step was needed, encoding the categorical data using a number of binary 'dummy' columns. To avoid overfitting, the maximum depth of the tree was limited and 5-fold cross-validation was used to determine the best value for maximum depth (i.e. the one that gave the minimal mean squared error averaged over the 5 cross-validation runs). Table \ref{tab:tree-mse} shows experiment results for a range of maximal depth values. Setting the depth limit to 10 was adopted as the best model.
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{c|cccccc}
+			\textbf{max\_depth}                & 8      & 9      & 10     & 11     & 12     & 13     \\ \hline
+			\textbf{mean cross-validation MSE} & 0.6476 & 0.6302 & 0.6248 & 0.6260 & 0.6335 & 0.6448
+		\end{tabular}
+		\caption{Mean MSE values for 5-fold cross-validation using a regression tree model with varying maximal depth.}
+		\label{tab:tree-mse}
+	\end{table}
+	\\A distinct feature of tree models is the ability to plot and examine the tree structure. We show the first three levels of the adopted tree in Figure \ref{fig:tree-plot}. We notice the top level splits mostly concern the most recent two action outcomes, which seems sensible.
+	\begin{figure}[h]
+		\includegraphics[scale=0.65]{img/tree_plot.pdf}
+		\caption{First levels of the regression tree structure.}
+		\label{fig:tree-plot}
+	\end{figure}
+	
+	\subsection{Random Forest}
+	
+	While decision trees are an appealing model in terms of simplicity and interpretability, we wish to examine a potentially stronger regression model by using ensemble methods. The random forest model from the Python scikit-learn package allows for a straightforward implementation of an ensemble of trees. We use the same pre-processing steps as above and train an ensemble of 10 decision tree estimators (experiments showed that using more estimators beyond 10 did not provide a significant decrease in mean squared error). Table \ref{tab:forest-mse} shows mean MSE values for 5-fold cross-validation using a random forest model. An improvement over using a single decision tree can clearly be observed.
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{c|ccccc}
+			\textbf{max\_depth}                & 10      & 11      & 12     & 13     & 14       \\ \hline
+			\textbf{mean cross-validation MSE} & 0.6177 & 0.6159 & 0.6170 & 0.6192 & 0.6222
+		\end{tabular}
+		\caption{Mean MSE values for 5-fold cross-validation using a regression random forest model with varying maximal depth.}
+		\label{tab:forest-mse}
+	\end{table}
+	
+	\subsection{Neural Network}
+	
+	We also explore the option of a neural network as a regression model. More to follow.
+	
+	\section{Temporally Consistent Models}
+	
+	In this section we consider a reinforcement learning approach, where the underlying MDP is exploited and the sequential nature of the data is explicitly used in the learning process. More specifically, the state-action value function has the recursive property:
+	\begin{equation}
+		Q(s,a) = r(s,a) +\sum_{s',a' \in S \times A} T(s,a,s',a') \; Q(s', a')
+		\label{eq:q-recursive}
+	\end{equation}
+	where $T(s,a)$ denotes the probability that the state-action pair $(s',a')$ follows $(s,a)$ in the MDP. Equation \eqref{eq:q-recursive} includes assumptions made in section \ref{section-mdp}.
+	
+	\subsection{Neural Network}
+
+	We train a neural network of the following architecture:
+	\begin{itemize}
+		\item First layer containing 256 LSTM nodes for sequence processing,
+		\item Hidden dense layer of 1000 nodes with RelU activation,
+		\item Output layer.
+	\end{itemize}
+	The input sequence contains vectors of the current state-action pair and a history of up to 9 previous state-action pairs in the same rally. A dynamic trace length parameter is passed to the network to ensure the correct history length is taken into account. The network outputs a single number, which is the estimated expected reward value of the given state sequence. This differs from the implementation in \cite{liu2018deep}, where separate values are output for 'home score', 'away score' and 'no score' events. Because of the nature of scoring in volleyball, every rally ends with one of the two teams scoring and only a single number is sufficient to describe all outcomes.\\\\
+	We apply on-policy temporal difference (TD) learning with a SARSA update step and monitor convergence through the 1-norm of successive Q function iterates.
+	
+	\section{Mimic Tree}
+	
+	To exploit the interpretability of a tree model, we also train a regression tree, but instead of using the original reward values of 1 and -1, we target the Q value predictions made by the RL-based neural network instead.
 	
 	\chapter{Model Evaluation}
 	
-	\section{Comparing Action Values Between Models}
+	\section{Regression Metrics}
+	Table \ref{tab:mse-models} shows mean squared error values \eqref{eq:mse} for the various models discussed in the previous chapter. The best regression fit was achieved by using a random forest model. However, as discussed below, temporal consistency is sacrificed as a result.
+	\begin{table}[ht]
+		\centering
+		\begin{tabular}{c|cccc}
+			\textbf{Model} & Dec. Tree & Rand. Forest & RL Neural Net. & Mimic Tree \\ \hline
+			\textbf{MSE}   & 0.613     & 0.592        & 0.603          & 0.606     
+		\end{tabular}
+		\caption{Mean squared error values between Q function estimates and true values for various models.}
+		\label{tab:mse-models}
+	\end{table}
+
+	\section{Temporal Consistency}
+	
+	The action-value function $Q_\pi$ for a given policy $\pi$ over a Markov decision process satisfies a recursive relationship in terms of the current state-action pair $(s,a)$ and possible future state-action pairs $(S_{t+1},A_{t+1})$: 
+	\begin{align}
+		Q_\pi(s,a) &= \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]\\
+		&=  R_{t+1} + \sum_{s' \in S, a' \in A} \gamma P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q_\pi(s',a').
+	\end{align}
+	This property is known as the Bellman equation \cite{sutton2018reinforcement} and it gives us the opportunity to verify the quality of our action-value estimates in an aspect that is different from what we did so far. If our approximation is indeed an action-value function, we expect it to (at least approximately) agree with the Bellman equation in addition to minimizing the loss function against the training data.\\\\
+	In our context we use a discount factor of $\gamma = 1$ and rewards only occur at episode-ending states. If $s$ is not a terminal state, $R_{t+1} = 0$ and the Bellman equation becomes
+	\begin{equation}
+		Q(s,a) = \sum_{s',a'} P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q(s',a').
+		\label{eq:markov_diff}
+	\end{equation}
+	Assuming we've computed an action-value function estimate for all the states in our dataset, we can proceed to verify this equality using the data, since the transition probability $P$ can be estimated by counting occurrences of states in the dataset (denoted by $c$) as
+	$$P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) = \frac{c(S_{t+1} = s', A_{t+1} = a', S_t = s, A_t = a)}{c(s,a)}.$$
+	Furthermore, since the state space is large, we wish to avoid examining a single state due to potential data sparsity effects. We will instead be interested in a set of state-action pairs $X$, summing all the corresponding state-action values as they appear in the dataset, namely the quantity:
+	$$\sum_{s,a\in X} c(s,a)Q(s,a).$$
+	Using \eqref{eq:markov_diff}, we obtain the right hand side:
+	\begin{equation}
+		\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} c(s,a)\sum_{s',a'\in S\times A} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a'),
+	\end{equation}
+	which simplifies to
+	\begin{equation}
+		\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a').
+		\label{eq:markov_num}
+	\end{equation}
+	This final form is the one we use to compute the Bellman equation agreement, since both the left and right hand sides can be computed in a simple loop over the dataset sequences. We are interested in how much our action-value estimates violate \eqref{eq:markov_num}, i.e. the quantity
+	\begin{equation}
+		e_X = |\sum_{s,a\in X} c(s,a)Q(s,a) - \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a') |.
+		\label{eq:markov_num2}
+	\end{equation}
+	We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.\\\\
+	Looking at the $e_X$ values shown in Table \ref{tab:bellman-agreement}, the neural network exhibits overall highest agreement with the Bellman equation and the single decision tree is the worst of our models in this respect. Since the neural network is trained using reinforcement learning principles, in particular because the loss function incorporates the temporal difference target 
+	$$Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma Q(s', a') - Q(s,a)),$$
+	where the state-action pair $(s,a)$ is followed by $(s',a')$ in the data, it is not surprising that temporal consistency is best maintained using this model. Decision tree and random forest models are trained under the assumption of independent data and do not incorporate any information about the sequential nature of the volleyball data. Their $e_X$ values are accordingly much larger and in the case of random forest could outweigh its lower mean squared error compared to the neural network. The mimic tree's $e_X$ seems to be close to the neural network's in most cases, but significantly higher for attack and block actions, which puts it somewhere between the neural network and the random forest overall.
+	
+	\begin{table}
+		\centering
+		\begin{tabular}{c|cccccc}
+			\textbf{Model}    & \textbf{Serve} & \textbf{Receive} & \textbf{Attack} & \textbf{Set} & \textbf{Block} & \textbf{Dig} \\ \hline
+			Decision Tree     & 0.0158                  & 0.0151                    & 0.0376                   & 0.0074                & 0.0641                  & 0.0662                \\
+			Random Forest     & 0.0172                  & 0.0183                    & 0.0075                   & 0.0066                & 0.0025                  & 0.0148                \\
+			RL Neural Network & 0.0001                  & 0.0005                    & 0.0003                   & 0.0019                & 0.0008                  & 0.0002                \\
+			Mimic Tree        & 0.0001                  & 0.0001                    & 0.0076                   & 0.0018                & 0.0125                  & 0.0009               
+		\end{tabular}
+		\caption{Table of Bellman equation agreement error $e_X$ for various sets of non-terminal states $X$. For each volleyball action type (columns), the set $X$ includes actions performed by the home team with a non-terminal outcome.}
+		\label{tab:bellman-agreement}
+	\end{table}
+	
+	\section{Action Value Comparison}
 	
 	We compare action values computed by the different models for the home and away team, including all possible action types and outcomes. Tables \ref{tab:qvalues_home} and \ref{tab:qvalues_away} contain mean values of $Q(s,a)$ over all state-action pairs where the action type and outcome for $a$ are fixed, separately for the home team and away team, respectively.\\\\
 	Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, home values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the correct values, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The same can be observed for the '!' and '+' outcomes of the away receive action. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
@@ -342,59 +505,10 @@
 	\end{table}
 	\\To further analyse the win prediction capabilities of our models, we consider predictions depending on how many actions remain in the rally. Recall that the model input is a partial sequence of actions leading up to the current state and action, which means model performance likely depends significantly on how much play remains in the current rally. Figure \ref{fig:acc-vs-dist} shows a graph of this dependency. When the observed action is the last one in the rally (i.e. zero actions remain), win prediction accuracy is perfect for all considered models. It remains significantly better than guessing for up to 4 actions away from the rally terminating, but for distances of 5 or higher, accuracy is significantly impaired and only the random forest model continues to give predictions with around 60\% accuracy.
 	\begin{figure}
-		\includegraphics[scale=0.55]{img/acc_vs_dist.pdf}
+		\includegraphics[scale=0.5]{img/acc_vs_dist.pdf}
 		\caption{Model win prediction accuracy plotted against distance from the end of rally in terms of actions remaining.}
 		\label{fig:acc-vs-dist}
 	\end{figure}
-	
-	\section{Temporal Consistency}
-	
-	The action-value function $Q_\pi$ for a given policy $\pi$ over a Markov decision process satisfies a recursive relationship in terms of the current state-action pair $(s,a)$ and possible future state-action pairs $(S_{t+1},A_{t+1})$: 
-	\begin{align}
-		Q_\pi(s,a) &= \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]\\
-		&=  R_{t+1} + \sum_{s' \in S, a' \in A} \gamma P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q_\pi(s',a').
-	\end{align}
-	This property is known as the Bellman equation \cite{sutton2018reinforcement} and it gives us the opportunity to verify the quality of our action-value estimates in an aspect that is different from what we did so far. If our approximation is indeed an action-value function, we expect it to (at least approximately) agree with the Bellman equation in addition to minimizing the loss function against the training data.\\\\
-	In our context we use a discount factor of $\gamma = 1$ and rewards only occur at episode-ending states. If $s$ is not a terminal state, $R_{t+1} = 0$ and the Bellman equation becomes
-	\begin{equation}
-		Q(s,a) = \sum_{s',a'} P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q(s',a').
-		\label{eq:markov_diff}
-	\end{equation}
-	Assuming we've computed an action-value function estimate for all the states in our dataset, we can proceed to verify this equality using the data, since the transition probability $P$ can be estimated by counting occurrences of states in the dataset (denoted by $c$) as
-	$$P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) = \frac{c(S_{t+1} = s', A_{t+1} = a', S_t = s, A_t = a)}{c(s,a)}.$$
-	Furthermore, since the state space is large, we wish to avoid examining a single state due to potential data sparsity effects. We will instead be interested in a set of state-action pairs $X$, summing all the corresponding state-action values as they appear in the dataset, namely the quantity:
-	$$\sum_{s,a\in X} c(s,a)Q(s,a).$$
-	Using \eqref{eq:markov_diff}, we obtain the right hand side:
-	\begin{equation}
-		\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} c(s,a)\sum_{s',a'\in S\times A} \frac{c(s',a',s,a)}{c(s,a)} Q(s',a'),
-	\end{equation}
-	which simplifies to
-	\begin{equation}
-		\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a').
-		\label{eq:markov_num}
-	\end{equation}
-	This final form is the one we use to compute the Bellman equation agreement, since both the left and right hand sides can be computed in a simple loop over the dataset sequences. We are interested in how much our action-value estimates violate \eqref{eq:markov_num}, i.e. the quantity
-	\begin{equation}
-		e_X = |\sum_{s,a\in X} c(s,a)Q(s,a) - \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a') |.
-		\label{eq:markov_num2}
-	\end{equation}
-	We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.\\\\
-	Looking at the $e_X$ values shown in Table \ref{tab:bellman-agreement}, the neural network exhibits overall highest agreement with the Bellman equation and the single decision tree is the worst of our models in this respect. Since the neural network is trained using reinforcement learning principles, in particular because the loss function incorporates the temporal difference target 
-	$$Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma Q(s', a') - Q(s,a)),$$
-	where the state-action pair $(s,a)$ is followed by $(s',a')$ in the data, it is not surprising that temporal consistency is best maintained using this model. Decision tree and random forest models are trained under the assumption of independent data and do not incorporate any information about the sequential nature of the volleyball data. Their $e_X$ values are accordingly much larger and in the case of random forest could outweigh its lower mean squared error compared to the neural network. The mimic tree's $e_X$ seems to be close to the neural network's in most cases, but significantly higher for attack and block actions, which puts it somewhere between the neural network and the random forest overall.
-	
-	\begin{table}
-		\centering
-		\begin{tabular}{c|cccccc}
-			\textbf{Model}    & \textbf{Serve} & \textbf{Receive} & \textbf{Attack} & \textbf{Set} & \textbf{Block} & \textbf{Dig} \\ \hline
-			Decision Tree     & 0.0158                  & 0.0151                    & 0.0376                   & 0.0074                & 0.0641                  & 0.0662                \\
-			Random Forest     & 0.0172                  & 0.0183                    & 0.0075                   & 0.0066                & 0.0025                  & 0.0148                \\
-			RL Neural Network & 0.0001                  & 0.0005                    & 0.0003                   & 0.0019                & 0.0008                  & 0.0002                \\
-			Mimic Tree        & 0.0001                  & 0.0001                    & 0.0076                   & 0.0018                & 0.0125                  & 0.0009               
-		\end{tabular}
-		\caption{Table of Bellman equation agreement error $e_X$ for various sets of non-terminal states $X$. For each volleyball action type (columns), the set $X$ includes actions performed by the home team with a non-terminal outcome.}
-		\label{tab:bellman-agreement}
-	\end{table}
 	
 	\chapter{Q Function Use Examples}
 	\section{Serve Risk Assessment}
