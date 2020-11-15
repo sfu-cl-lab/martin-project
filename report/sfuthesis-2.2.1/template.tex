@@ -189,26 +189,40 @@
 	
 	%By default, only works cited in the text will be added to the bibliography~\cite{latexcompanion}.
 	\chapter{Introduction}
-	\section{Problem Statement}
-	\section{Related Work}
-	Other sports:\\
-	\cite{cervone2014pointwise} uses expected value in NBA possessions, equivalent to Q function.\\
-	\cite{kaplan2014markov} uses a hockey MDP to get win probabilities.\\
-	\cite{decroos2019actions} evaluates soccer actions in terms of scoring probability using event stream data.\\
-	\cite{Ljung2019} extends the work of Routley on NHL RL to consider player pairs.\\
-	\cite{claudino2019current} examines the emergence of data science in sports analytics.\\
-	Volleyball MDP:\\
-	\cite{miskin2010skill} uses Markov chains to determine skill importance in volleyball.\\
-	\cite{florence2008skill} also uses Markov chains to determine rally winning probabilities.\\
-	\cite{alexandros2012existence} same concept to determine home advantage.\\
-	Volleyball machine learning:\\
-	\cite{tumer2017prediction} are among the first in the volleyball field, predicting future rankings from win/loss data.\\
-	\cite{wenninger2020performance} predict attack patterns and success using spatial event data in beach volleyball.\\
-	\cite{van2016analyzing} use inductive logic programming to detect attacking strategies in optical tracking data.\\
-	\cite{wang2018volleyball} classify players into skill levels based on motion data during spiking from wearable devices.\\
-	\cite{kautz2017activity} use activity recognition to determine training load and risk of injury in beach volleyball.\\
-	\cite{ibrahim2018deep} also uses deep models for activity recognition on volleyball video.
 	
+	Increasing volume of collected data in all kinds of sports has made machine learning techniques a quickly developing area in sports science, but progress varies depending on the particular sport in question \cite{claudino2019current}. This project takes a reinforcement learning approach previously applied in hockey \cite{liu2018deep, routley2015markov,schulte2017markov} and combines it with a new volleyball dataset with the aim of extracting insight through an action value function. We consider a number of different methods to our end. On one hand, we construct models that focus on the regression part of the problem. On the other hand, we consider models that explicitly incorporate the sequential nature of the dataset.
+	
+	\section{Preliminaries and Objectives}
+	\subsection{Markov Decision Process}
+	A Markov decision process (abbreviated as MDP) is a discrete-time stochastic process consisting of a set of states $S$, a set of actions $A$, and a transition function $P_a(s,s')$ which gives the transition probability from state $s$ into state $s'$ given that action $a$ was taken. 
+	\subsection{Action Value Function}
+	If a reward function $R_a(s,s')$ is provided along with an MDP, this allows for evaluation of actions taken in terms of expected future reward. The Q function, given for an action taking policy $\pi$ as:
+	\begin{equation}
+		Q_\pi(s,a) = \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]
+	\end{equation}
+	formalizes this. $R_{t+1}$ is shorthand for $R_a(S_t,S_{t+1})$, i.e. the reward obtained by taking action $a$ in state $S_t$ and proceeding to state $S_{t+1}$. A discounting factor $\gamma$ is used to avoid infinitely large accumulation of rewards in some applications.
+	\subsection{Objectives}
+	The aim of this project is to:
+	\begin{enumerate}
+		\item Construct a context-aware MDP from volleyball play-by-play event data.
+		\item Compute the action value function using various machine learning models and compare results.
+	\end{enumerate}  
+	
+	\section{Related Work}
+	The concept of an action value function has been applied to event data in a number of different sports. In \cite{cervone2014pointwise}, expected value of possessions in basketball (equivalent to a Q function) was used on an NBA dataset. Similarly, soccer actions were evaluated in terms of scoring probability in \cite{decroos2019actions}. However, this project relies mostly on work in the hockey context done by Liu, Routley and Schulte \cite{liu2018deep, routley2015markov, schulte2017markov, schulte2017apples} on large NHL event datasets. Their work has also been extended to consider pairs of players appearing on the ice together in \cite{Ljung2019}.\\
+	In volleyball, there have been previous applications of statistical methods involving Markov chains, but the dataset concerned actions of only one of the two teams and no game context such as current score was included. This is in contrast to our dataset, where both opponents' data is included. Skill importance was computed in this fashion in \cite{miskin2010skill}, rally winning probabilities were computed in \cite{florence2008skill} and home advantage was brought into question in \cite{alexandros2012existence}.\\
+	More recently, machine learning has been applied to volleyball data with the goal of predicting future team rankings from win/loss data in \cite{tumer2017prediction}.  Deep models were employed for activity recognition on video in \cite{ibrahim2018deep} and \cite{kautz2017activity}, with the objective of determining training load and injury risk. In \cite{wenninger2020performance} and \cite{van2016analyzing}, analysis and prediction of attack patterns was carried out using artificial intelligence methods and \cite{wang2018volleyball} tackled classification of players into skill levels based on motion data from wearable devices.\\
+	Despite progress of machine learning in a variety of fields in volleyball, however, we did not encounter a context-sensitive action value approach that this project applies to a volleyball event dataset.
+
+	\section{Report Structure}
+	This report is structured as follows:
+	\begin{itemize}
+		\item In Chapter 2, we describe the volleyball dataset used and discuss the modelling decisions made in the process of constructing our MDP.
+		\item Chapter 3 gives details on the various machine learning models used in computing the action value function.
+		\item In Chapter 4, we discuss comparison metrics between the models and give results.
+		\item Chapter 5 gives some examples of potential applications of the action value function in a practical setting.
+		\item Chapter 6 draws conclusions and suggests future work.
+	\end{itemize}
 	
 	\chapter{Dataset and the Markov Decision Process}
 	
@@ -614,6 +628,9 @@
 		\caption{Team mean ranking plotted against mean action impact for Canada West participating teams, see Table \ref{tab:team-impact} for values shown in this graph.}
 		\label{fig:team-impact}
 	\end{figure}
+
+	\chapter{Conclusion}
+		
 	
 	%   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%
