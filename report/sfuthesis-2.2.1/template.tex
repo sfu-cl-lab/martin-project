@@ -26,8 +26,8 @@
 %   Fill in the following information for the title page and approval page.
 %
 
-\title{Learning State-Action Value Functions for Volleyball Data}
-\thesistype{Thesis}
+\title{Temporal Consistency in Learning Action Values for Volleyball}
+\thesistype{Project}
 \author{Martin Ambrozic}
 \previousdegrees{%
 	M.Sc., Delft Technical University, 2013\\
@@ -36,14 +36,14 @@
 \discipline{Computing Science}
 \department{Department of Computing Science}
 \faculty{Faculty of Applied Science}
-\copyrightyear{2020}
-\semester{Fall 2020}
-\date{December 20, 2020}
+\copyrightyear{2021}
+\semester{Spring 2021}
+\date{January 26, 2021}
 
 \keywords{}
 
 \committee{%
-	\chair{Chair}{Professor}
+	\chair{Ghassan Hamarneh}{Professor\\School of Computing Science}
 	\member{Oliver Schulte}{Senior Supervisor\\Professor\\School of Computing Science}
 	\member{Mo Chen}{Internal Examiner\\Assistant Professor\\School of Computing Science}
 	\member{Steven Ruuth}{External Examiner\\Professor\\Department of Mathematics}
@@ -200,20 +200,23 @@
 	\begin{equation}
 		Q_\pi(s,a) = \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]
 	\end{equation}
-	formalizes this. $R_{t+1}$ is shorthand for $R_a(S_t,S_{t+1})$, i.e. the reward obtained by taking action $a$ in state $S_t$ and proceeding to state $S_{t+1}$. A discounting factor $\gamma$ is used to avoid infinitely large accumulation of rewards in some applications.
+	formalizes this. Here $R_{t+1}$ is shorthand for $R_a(S_t,S_{t+1})$, i.e. the reward obtained by taking action $a$ in state $S_t$ and proceeding to state $S_{t+1}$. A discounting factor $\gamma$ is used to avoid infinitely large accumulation of rewards in some applications.
 	\subsection{Objectives}
 	The aim of this project is to:
 	\begin{enumerate}
-		\item Construct a context-aware MDP from volleyball play-by-play event data.
-		\item Compute the action value function using various machine learning models and compare results.
+		\item Construct an MDP from volleyball play-by-play event data. The states of the MDP represent match context.
+		\item Construct an action value function using various machine learning models and compare results.
 	\end{enumerate}  
 	
 	\section{Related Work}
-	The concept of an action value function has been applied to event data in a number of different sports. In \cite{cervone2014pointwise}, expected value of possessions in basketball (equivalent to a Q function) was used on an NBA dataset. Similarly, soccer actions were evaluated in terms of scoring probability in \cite{decroos2019actions}. However, this project relies mostly on work in the hockey context done by Liu, Routley and Schulte \cite{liu2018deep, routley2015markov, schulte2017markov, schulte2017apples} on large NHL event datasets. Their work has further been extended to consider pairs of players appearing on the ice together in \cite{Ljung2019}. A similar action value based approach was also taken in \cite{kaplan2014markov}.\\
-	In volleyball, there have been previous applications of statistical methods involving Markov chains, but the dataset concerned actions of only one of the two teams and no game context such as current score was included. This is in contrast to our dataset, where both opponents' data is included. Skill importance was computed in this fashion in \cite{miskin2010skill}, rally winning probabilities were computed in \cite{florence2008skill} and home advantage was brought into question in \cite{alexandros2012existence}.\\
-	More recently, machine learning has been applied to volleyball data with the goal of predicting future team rankings from win/loss data in \cite{tumer2017prediction}.  Deep models were employed for activity recognition on video in \cite{ibrahim2018deep} and \cite{kautz2017activity}, with the objective of determining training load and injury risk. In \cite{wenninger2020performance} and \cite{van2016analyzing}, analysis and prediction of attack patterns was carried out using artificial intelligence methods and \cite{wang2018volleyball} tackled classification of players into skill levels based on motion data from wearable devices.\\
-	Despite progress of machine learning in a variety of fields in volleyball, however, we did not encounter a context-sensitive action value approach that this project applies to a volleyball event dataset.
-
+	\subsection{Computing Action Values}
+	The concept of an action value function has been applied to event data in a number of different sports. In \cite{cervone2014pointwise}, expected value of possessions in basketball (equivalent to a Q function) was used on an NBA dataset. Similarly, soccer actions were evaluated in terms of scoring probability in \cite{decroos2019actions}. However, this project relies mostly on work in the hockey context done by Liu, Routley and Schulte \cite{liu2018deep, routley2015markov, schulte2017markov, schulte2017apples} on large NHL event datasets. Their work has further been extended to consider pairs of players appearing on the ice together in \cite{Ljung2019}. A similar action value based approach was also taken in \cite{kaplan2014markov}.
+	\subsection{Volleyball Statistical Analysis}
+	In volleyball, there have been previous applications of statistical methods involving Markov chains, but the dataset concerned actions of only one of the two teams and no game context such as current score was included. This is in contrast to our dataset, where both opponents' data is included. Skill importance was computed in this fashion in \cite{miskin2010skill}, rally winning probabilities were computed in \cite{florence2008skill} and home advantage was brought into question in \cite{alexandros2012existence}.
+	\subsection{Machine Learning in Volleyball}
+	Moving to more recent research than the purely statistical research listed in the previous section, machine learning has been applied to volleyball data with the goal of predicting future team rankings from win/loss data in \cite{tumer2017prediction}.  Deep models were employed for activity recognition on video in \cite{ibrahim2018deep} and \cite{kautz2017activity}, with the objective of determining training load and injury risk. In \cite{wenninger2020performance} and \cite{van2016analyzing}, analysis and prediction of attack patterns was carried out using artificial intelligence methods and \cite{wang2018volleyball} tackled classification of players into skill levels based on motion data from wearable devices.\\\\
+	Despite progress of machine learning in a variety of fields in volleyball, however, we did not encounter a context-aware approach to estimating action values  that this project applies to a volleyball event dataset.
+	
 	\section{Report Structure}
 	This report is structured as follows:
 	\begin{itemize}
@@ -227,16 +230,20 @@
 	\chapter{Dataset and the Markov Decision Process}
 	
 	\section{Dataset Description}
-	The volleyball dataset was collected in collaboration with the University of British Columbia's men's volleyball programme. The UBC Thunderbirds compete in the Canada West division of U-Sports volleyball, which is the highest level of volleyball university competition in Canada. Their regular season consists of a double round robin phase, where they play each of the other Canada West teams twice, and a play-off phase, where top seeded teams play a single elimination bracket to determine the conference champion as well as participants in the U-Sports national final tournament. During the data collection time window, 12 teams participated in the Canada West competition, except in 2017/2018, where 13 teams competed.\\\\
+	The volleyball dataset was collected in collaboration with the University of British Columbia's men's volleyball programme. The UBC Thunderbirds compete in the Canada West division of U-Sports volleyball, which is the highest level of volleyball university competition in Canada. Their regular season consists of a double round robin phase, where they play each of the other Canada West teams twice, and a play-off phase, where top seeded teams play a single elimination bracket to determine the conference champion as well as participants in the U-Sports national final tournament. During the data collection time window, 12 teams participated in the Canada West competition, except in 2017/2018, where 13 teams competed.\\
 	The collection process was manual, using specialized software to record play-by-play data, either live at the game or after the fact using game video. In the former case, a second pass was needed to ensure quality and completeness of data. The format used was introduced by the company Data Project based in Salerno, Italy and has become widely adopted in professional and international volleyball. Both teams' actions were included for every game.\\
-	The dataset contains data from all games played by UBC over three seasons. Additionally, some matches between other teams in Canada West were included, originally intended for the purpose of tactical preparation for an upcoming opponent. In numbers, the data contains:
-	\begin{itemize}
-		\item 204 games,
-		\item 764 sets,
-		\item 34,242 rallies,
-		\item 146,050 game events.
-	\end{itemize}
-	Each entry in the dataset corresponds to an action event by a player in the game. We differentiate 7 action types:
+	The dataset contains data from all games played by UBC over three seasons. Additionally, a number of matches between other teams in Canada West were included, originally intended for the purpose of tactical preparation for an upcoming opponent.\\
+	Table \ref{tab:data-numbers} describes the dataset size in terms of games, sets, rallies and game events.\\
+	\begin{table}[ht]
+		\centering
+		\begin{tabular}{c|c|c|c|c}
+			& \textbf{Games} & \textbf{Sets} & \textbf{Rallies} & \textbf{Events} \\ \hline
+			\textbf{Contained in Data} & 204            & 764           & 34,242           & 146,050        
+		\end{tabular}
+		\caption{Dataset size description in various terms.}
+		\label{tab:data-numbers}
+	\end{table}
+	\\Each entry in the dataset corresponds to an action event by a player in the game. We differentiate 7 action types:
 	\begin{itemize}
 		\item \textbf{Serve}: first contact of the serving team, the action of putting the ball into play over the net from behind the baseline.
 		\item \textbf{Receive}: first contact of the team receiving the opponent's serve.
@@ -262,7 +269,7 @@
 		\caption{Summary of fields in the volleyball dataset. Action-related fields on top, context-related fields on the bottom.}
 		\label{tab:data-fields}
 	\end{table}
-
+	
 	\section{The Markov Decision Process}
 	\label{section-mdp}
 	
@@ -289,8 +296,8 @@
 		Q_\pi(s,a) = \mathbb{E} \left[ \sum_{t \ge k} \gamma^{t-k} r_{t} \ | \ s_k = s, a_k = a \right]\\
 		\label{eq:qfunction}
 	\end{equation}
-	Often in reinforcement learning applications, the objective is to compute the optimal policy $\pi^*$. This is not the case in this context, as the objective is only to evaluate the policy observed in the data. We  thus omit the subscript $\pi$ from here on. We also use a discounting factor of $\gamma=1$ and omit it as well.
-		
+	Often in reinforcement learning applications, the objective is to compute the optimal policy $\pi^*$. This is {\em not} the case in this context, as the objective is only to {\em evaluate} the match states and actions {\em given} the policy observed in the data. The observed policy represents the behaviour of the average volleyball player. We  thus omit the subscript $\pi$ from here on. We also use a discounting factor of $\gamma=1$ and omit it as well. 
+	
 	
 	\chapter{Models}
 	
@@ -303,12 +310,12 @@
 	\end{equation}
 	then $Q'(s,a)$ will approximate the conditional expected value
 	$$\mathbb{E} \left[R \, | \, x \right].$$
-	See \cite{bishop2006pattern} for a derivation of this property. In other words, since $x$ is a state-action pair sample and $R(x)$ is the eventual reward, $Q'(x)$ will approximate the Q function. We now consider specific models that follow this approach.
+	This follows from the property that conditional expectation of the target in general minimizes mean squared error. See, e.g. Bishop \cite{bishop2006pattern} section 1.5.5 for a derivation of this property. In other words, since $x$ is a state-action pair sample and $R(x)$ is the eventual reward, $Q'(x)$ will approximate the Q function. We now consider specific models that follow this approach.
 	
 	\subsection{Decision Tree}
 	
 	Decision trees are an appealing model because they offer interpretable function approximation modelled as a sequence of simple decisions. We used a regression tree class from the Python scikit-learn package. Due to categorical fields in the dataset, a pre-processing step was needed, encoding the categorical data using a number of binary 'dummy' columns. To avoid overfitting, the maximum depth of the tree was limited and 5-fold cross-validation was used to determine the best value for maximum depth (i.e. the one that gave the minimal mean squared error averaged over the 5 cross-validation runs). Table \ref{tab:tree-mse} shows experiment results for a range of maximal depth values. Setting the depth limit to 10 was adopted as the best model.
-	\begin{table}[h]
+	\begin{table}[ht]
 		\centering
 		\begin{tabular}{c|cccccc}
 			\textbf{max\_depth}                & 8      & 9      & 10     & 11     & 12     & 13     \\ \hline
@@ -317,8 +324,8 @@
 		\caption{Mean MSE values for 5-fold cross-validation using a regression tree model with varying maximal depth.}
 		\label{tab:tree-mse}
 	\end{table}
-	\\A distinct feature of tree models is the ability to plot and examine the tree structure. We show the first three levels of the adopted tree in Figure \ref{fig:tree-plot}. We notice the top level splits mostly concern the most recent two action outcomes, which seems sensible.
-	\begin{figure}[h]
+	\\A distinct feature of tree models is the ability to plot and examine the tree structure. We show the first three levels of the adopted tree in Figure \ref{fig:tree-plot}. We notice the top level splits mostly concern the most recent two action outcomes, which seems sensible. Interestingly, it looks like action outcomes are considered before action types. This is likely due to the fact that outcome symbols, especially the extremes '\#' and '=', share the meaning of 'point scored' and 'point lost' across several volleyball skills.
+	\begin{figure}[ht]
 		\includegraphics[scale=0.65]{img/tree_plot.pdf}
 		\caption{First levels of the regression tree structure.}
 		\label{fig:tree-plot}
@@ -327,7 +334,7 @@
 	\subsection{Random Forest}
 	
 	While decision trees are an appealing model in terms of simplicity and interpretability, we wish to examine a potentially stronger regression model by using ensemble methods. The random forest model from the Python scikit-learn package allows for a straightforward implementation of an ensemble of trees. We use the same pre-processing steps as above and train an ensemble of 10 decision tree estimators (experiments showed that using more estimators beyond 10 did not provide a significant decrease in mean squared error). Table \ref{tab:forest-mse} shows mean MSE values for 5-fold cross-validation using a random forest model. An improvement over using a single decision tree can clearly be observed.
-	\begin{table}[h]
+	\begin{table}[ht]
 		\centering
 		\begin{tabular}{c|ccccc}
 			\textbf{max\_depth}                & 10      & 11      & 12     & 13     & 14       \\ \hline
@@ -337,13 +344,28 @@
 		\label{tab:forest-mse}
 	\end{table}
 	
-	\subsection{Neural Network}
+	\subsection{Regression Neural Network}
 	
-	We also explore the option of a neural network as a regression model. More to follow.
+	We also explore the option of a neural network as a regression model. After experimenting with a range of hidden layers, activation functions and node counts, we decide on the following architecture:
+	\begin{itemize}
+		\item First dense layer of 200 nodes with RelU activation,
+		\item Second dense layer of 20 nodes with RelU activation,
+		\item Output layer with $\tanh$ activation.
+	\end{itemize}
+	The final activation is a $\tanh$ function because we desire an output range of $[-1,1]$ to match the action value function. Similarly to previous models, we employ 5-fold cross validation to determine the best number of training epochs to prevent overfitting to the training data. Table \ref{tab:nn-mse} shows mean MSE values for a range of training epoch counts. We adopted 7 epochs as the best value in further experiments.
+	\begin{table}[ht]
+		\centering
+		\begin{tabular}{c|ccccccc}
+			\textbf{epochs} & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\ \hline
+			\textbf{mean cross-val. MSE} & 0.6162 & 0.6145 & 0.6139 & 0.6116 & 0.6147 & 0.6142 & 0.6154
+		\end{tabular}
+		\caption{Mean MSE values for 5-fold cross-validation using a regression neural network model with varying number of training epochs.}
+		\label{tab:nn-mse}
+	\end{table}
 	
 	\section{Temporally Consistent Models}
 	
-	In this section we consider a reinforcement learning approach, where the underlying MDP is exploited and the sequential nature of the data is explicitly used in the learning process. More specifically, the state-action value function has the recursive property:
+	In this section we consider a reinforcement learning approach, where the underlying MDP is exploited and the sequential nature of the data is explicitly used in the learning process. More specifically, the state-action value function has the recurrent property:
 	\begin{equation}
 		Q(s,a) = r(s,a) +\sum_{s',a' \in S \times A} T(s,a,s',a') \; Q(s', a')
 		\label{eq:q-recursive}
@@ -351,23 +373,42 @@
 	where $T(s,a)$ denotes the probability that the state-action pair $(s',a')$ follows $(s,a)$ in the MDP. Equation \eqref{eq:q-recursive} includes assumptions made in section \ref{section-mdp}.
 	
 	\subsection{Neural Network}
-
-	We train a neural network of the following architecture:
+	
+	We base our neural network architecture on the approach in \cite{liu2018deep} that proved successful for deep learning using NHL hockey data. After some experiments with the number of nodes, we adopt the following structure for our reinforcement learning based neural network:
 	\begin{itemize}
 		\item First layer containing 256 LSTM nodes for sequence processing,
 		\item Hidden dense layer of 1000 nodes with RelU activation,
 		\item Output layer.
 	\end{itemize}
-	The input sequence contains vectors of the current state-action pair and a history of up to 9 previous state-action pairs in the same rally. A dynamic trace length parameter is passed to the network to ensure the correct history length is taken into account. The network outputs a single number, which is the estimated expected reward value of the given (partial) state sequence. This differs from the implementation in \cite{liu2018deep}, where separate values are output for 'home score', 'away score' and 'no score' events. Because of the nature of scoring in volleyball, every rally ends with one of the two teams scoring and only a single number is sufficient to describe all outcomes.\\
-	We apply on-policy temporal difference (TD) learning with a SARSA update step and monitor convergence through the 1-norm of successive Q function iterates.
+	The input sequence contains vectors of the current state-action pair and a history of up to 9 previous state-action pairs in the same rally. As in \cite{liu2018deep}, a dynamic trace length parameter is passed to the network to ensure the correct history length is taken into account. The network outputs a single number, which is the estimated expected reward value of the given (partial) state sequence. This differs from the implementation in \cite{liu2018deep}, where separate values are output for 'home score', 'away score' and 'no score' events. Because of the nature of scoring in volleyball, every rally ends with one of the two teams scoring and only a single number is sufficient to describe all outcomes.\\
+	Denoting the weight vector of the neural network by $\mathbf{w}$ and the corresponding approximated action value function as $Q(s,a;\mathbf{w})$, we apply one-step temporal difference bootstrapping \cite{sutton2018reinforcement} to approximate the true action values $Q(s,a)$ and minimize the loss function:
+	$$J(\mathbf{w}) = \mathbb{E}[(R(s,a) + \gamma Q(s', a'; \mathbf{w}) - Q(s,a;\mathbf{w}))^2],$$
+	where the state-action pair $s,a$ is followed by the pair $s',a'$, producing a reward of $R(s,a)$. For terminal states $s$ where no successor state $s'$ exists, expected future reward becomes trivial - for those states we set $Q(s,a;\mathbf{w}) = R(s,a)$.\\ The training process uses gradient backpropagation by the Adam algorithm \cite{kingma2014adam} as implemented in the Tensorflow Python package.\\
+	We monitor convergence of the action values through the 1-norm of successive Q function iterates, i.e. denoting by $\mathbf{Q}^i$ the vector of all action values produced by the $i$-th iteration through the training data, we consider  $\|\mathbf{Q}^i - \mathbf{Q}^{i-1}\|_1$ as a measure of convergence and stop when its value falls below a predefined threshold.
 	
 	\section{Mimic Tree}
 	
 	To exploit the interpretability of a tree model, we also train a regression tree, but instead of using the original reward values of 1 and -1, we target the Q value predictions made by the RL-based neural network instead. The concept is based on \cite{sun2020cracking}.
 	
+	\section{Summary}
+	To summarize, Table \ref{tab:model_summary} gives a list of all models considered in this project and whether or not they enforce temporal consistency stemming from the sequential nature of the data and the underlying MDP. Note that, while the mimic tree does not enforce temporal consistency in its own right, it learns from the output of the RL Neural Network, indirectly incorporating some temporal information.
+	\begin{table}[ht]
+		\centering
+		\begin{tabular}{c|c}
+			\textbf{Model} & \textbf{Temporal Consistency} \\ \hline
+			Decision Tree & No \\
+			Random Forest & No \\
+			Regression Neural Network & No \\
+			Reinforcement Learning Neural Network & Yes \\
+			Mimic Tree & No* \\
+		\end{tabular}
+		\caption{Summary of models used to compute action values.}
+		\label{tab:model_summary}
+	\end{table}
+	
 	\chapter{Model Evaluation}
 	
-	\section{Regression Metrics}
+	\section{Regression Mean Squared Error}
 	Table \ref{tab:mse-models} shows mean squared error values \eqref{eq:mse} for the various models discussed in the previous chapter. The best regression fit was achieved by using a random forest model. However, as discussed below, temporal consistency is sacrificed as a result.
 	\begin{table}[ht]
 		\centering
@@ -378,10 +419,10 @@
 		\caption{Mean squared error values between Q function estimates and true values for various models.}
 		\label{tab:mse-models}
 	\end{table}
-
+	
 	\section{Temporal Consistency}
 	
-	The action-value function $Q_\pi$ for a given policy $\pi$ over a Markov decision process satisfies a recursive relationship in terms of the current state-action pair $(s,a)$ and possible future state-action pairs $(S_{t+1},A_{t+1})$: 
+	The action-value function $Q_\pi$ for a given policy $\pi$ over a Markov decision process satisfies a recurrent relationship in terms of the current state-action pair $(s,a)$ and possible future state-action pairs $(S_{t+1},A_{t+1})$: 
 	\begin{align}
 		Q_\pi(s,a) &= \mathbb{E} \left[  R_{t+1} + \gamma Q_{\pi}(S_{t+1}, A_{t+1}) \, | \, S_t = s, A_t = a \right]\\
 		&=  R_{t+1} + \sum_{s' \in S, a' \in A} \gamma P(S_{t+1} = s', A_{t+1} = a' | S_t = s, A_t = a) Q_\pi(s',a').
@@ -405,15 +446,16 @@
 		\sum_{s,a\in X} c(s,a)Q(s,a) = \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a').
 		\label{eq:markov_num}
 	\end{equation}
-	This final form is the one we use to compute the Bellman equation agreement, since both the left and right hand sides can be computed in a simple loop over the dataset sequences. We are interested in how much our action-value estimates violate \eqref{eq:markov_num}, i.e. the quantity
+	This final form is the one we use to compute the degree of temporal inconsistency, since both the left and right hand sides can be computed in a simple loop over the dataset sequences. We are interested in how much our action-value estimates violate \eqref{eq:markov_num}, i.e. the quantity
 	\begin{equation}
 		e_X = |\sum_{s,a\in X} c(s,a)Q(s,a) - \sum_{s,a\in X} \sum_{s',a'\in S\times A} c(s',a',s,a) Q(s',a') |.
 		\label{eq:markov_num2}
 	\end{equation}
 	We choose the state-action subset $X$ to include actions of a single type with only non-terminal outcomes (for example, we include all serve actions that do not result in an immediate error or point won). We compute the quantity $e_X$ for various action types and compare results across different action-value function approximations.\\
-	Looking at the $e_X$ values shown in Table \ref{tab:bellman-agreement}, the neural network exhibits overall highest agreement with the Bellman equation and the single decision tree is the worst of our models in this respect. Since the neural network is trained using reinforcement learning principles, in particular because the loss function incorporates the temporal difference target 
-	$$Q(s,a) \leftarrow Q(s,a) + \alpha (r + \gamma Q(s', a') - Q(s,a)),$$
-	where the state-action pair $(s,a)$ is followed by $(s',a')$ in the data, it is not surprising that temporal consistency is best maintained using this model. Decision tree and random forest models are trained under the assumption of independent data and do not incorporate any information about the sequential nature of the volleyball data. Their $e_X$ values are accordingly much larger and in the case of random forest could outweigh its lower mean squared error compared to the neural network. The mimic tree's $e_X$ seems to be close to the neural network's in most cases, but significantly higher for attack and block actions, which puts it somewhere between the neural network and the random forest overall.
+	Looking at the $e_X$ values shown in Table \ref{tab:bellman-agreement}, the reinforcement learning neural network exhibits overall highest temporal consistency and the single decision tree is the worst of our models in this respect. Since the RL neural network training incorporates the temporal difference update, explicitly moving toward the TD target
+	$$R(s,a) + \gamma Q(s', a') - Q(s,a)$$
+	where the state-action pair $(s,a)$ is followed by $(s',a')$ in the data, it is not surprising that temporal consistency is best maintained using this model. The Decision tree and other regression models are trained under the assumption of independently sampled data and do not incorporate any information about the sequential nature of the volleyball data. Their $e_X$ values are accordingly much larger. In particular, the regression-based neural network exhibits high $e_X$ values overall. In the case of the random forest, that drawback of low temporal agreement could outweigh its lower mean squared error compared to the RL neural network when used to compute action values.\\
+	The mimic tree model is by design a middle ground between regression models and reinforcement learning, and its $e_X$ values seem to align with that premise. They are close to the RL neural network's in most cases, but significantly higher for attack and block actions.
 	
 	\begin{table}
 		\centering
@@ -425,84 +467,85 @@
 			RL Neural Network & 0.0001                  & 0.0005                    & 0.0003                   & 0.0019                & 0.0008                  & 0.0002                \\
 			Mimic Tree        & 0.0001                  & 0.0001                    & 0.0076                   & 0.0018                & 0.0125                  & 0.0009               
 		\end{tabular}
-		\caption{Table of Bellman equation agreement error $e_X$ for various sets of non-terminal states $X$. For each volleyball action type (columns), the set $X$ includes actions performed by the home team with a non-terminal outcome.}
+		\caption{Degree of temporal inconsistency $e_X$ for various sets of non-terminal states $X$. For each volleyball action type (columns), the set $X$ includes actions performed by the home team with a non-terminal outcome.}
 		\label{tab:bellman-agreement}
 	\end{table}
 	
 	\section{Action Value Comparison}
 	
 	We compare action values computed by the different models for the home and away team, including all possible action types and outcomes. Tables \ref{tab:qvalues_home} and \ref{tab:qvalues_away} contain mean values of $Q(s,a)$ over all state-action pairs where the action type and outcome for $a$ are fixed, separately for the home team and away team, respectively.\\
-	Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, home values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the correct values, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The same can be observed for the '!' and '+' outcomes of the away receive action. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
+	Note that there is no inherent order in the outcome symbols and the values for the different outcomes are entirely learned by the models. The fact that action values increase for outcomes generally considered more favourable is a good sanity check and provides validation for our models. We also compute mean eventual rewards directly from the data for comparison. Overall the model values seem to agree well with the data averages with a few exceptions. For example, home values for serve outcomes '+' and '!' computed by the decision tree model are identical and seem to be somewhere in between the %correct values
+	outcome frequencies observed in the data set, suggesting that a split failed to occur and samples were grouped together in the same leaf node. The same can be observed for the '!' and '+' outcomes of the away receive action. The random forest model corrects this to some extent, but still outputs a positive value for the '!' outcome, contrary to what the data suggests.
 	
 	\begin{table}
 		\centering
-		\begin{tabular}{cccccccc}
+		\begin{tabular}{cc|ccccc|c}
 			\multicolumn{8}{c}{\textbf{Home Action Values}}                                                                                                                                                  \\
-			\multicolumn{2}{c|}{\textbf{Action}} & \textbf{Dec. Tree} & \textbf{Rand. For.} & \textbf{Regr. NN} & \textbf{RL NN} & \multicolumn{1}{c|}{\textbf{Mim. Tree}} & \textbf{Data} \\ \hline
-			S              & \multicolumn{1}{c|}{=}                & -1                 & -1                  & -1                & -0.998         & \multicolumn{1}{c|}{-0.998}             & -1            \\
-			& \multicolumn{1}{c|}{-}                & -0.293             & -0.291              & -0.262            & -0.29          & \multicolumn{1}{c|}{-0.29}              & -0.293        \\
-			& \multicolumn{1}{c|}{!}                & 0.103              & 0.011               & -0.066            & -0.101         & \multicolumn{1}{c|}{-0.101}             & -0.106        \\
-			& \multicolumn{1}{c|}{+}                & 0.103              & 0.246               & 0.298             & 0.225          & \multicolumn{1}{c|}{0.225}              & 0.238         \\
-			& \multicolumn{1}{c|}{\#}               & 1                  & 1                   & 0.985             & 0.997          & \multicolumn{1}{c|}{0.998}              & 1             \\ \hline
-			R              & \multicolumn{1}{c|}{=}                & -1                 & -1                  & -1                & -0.998         & \multicolumn{1}{c|}{-0.998}             & -1            \\
-			& \multicolumn{1}{c|}{-}                & -0.167             & -0.167              & -0.118            & -0.157         & \multicolumn{1}{c|}{-0.157}             & -0.166        \\
-			& \multicolumn{1}{c|}{!}                & 0.104              & 0.039               & 0.192             & 0.11           & \multicolumn{1}{c|}{0.108}              & 0.118         \\
-			& \multicolumn{1}{c|}{+}                & 0.287              & 0.323               & 0.424             & 0.325          & \multicolumn{1}{c|}{0.325}              & 0.321         \\
-			& \multicolumn{1}{c|}{\#}               & 0.437              & 0.427               & 0.409             & 0.446          & \multicolumn{1}{c|}{0.446}              & 0.446         \\ \hline
-			A              & \multicolumn{1}{c|}{=}                & -0.991             & -0.987              & -0.997            & -0.994         & \multicolumn{1}{c|}{-0.993}             & -1            \\
-			& \multicolumn{1}{c|}{/}                & -0.984             & -0.968              & -0.984            & -0.993         & \multicolumn{1}{c|}{-0.986}             & -1            \\
-			& \multicolumn{1}{c|}{-}                & 0.02               & -0.052              & -0.021            & -0.072         & \multicolumn{1}{c|}{-0.072}             & -0.071        \\
-			& \multicolumn{1}{c|}{!}                & 0.107              & 0.082               & 0.190             & 0.122          & \multicolumn{1}{c|}{0.117}              & 0.127         \\
-			& \multicolumn{1}{c|}{+}                & 0.302              & 0.284               & 0.439             & 0.372          & \multicolumn{1}{c|}{0.368}              & 0.362         \\
-			& \multicolumn{1}{c|}{\#}               & 0.947              & 0.99                & 0.988             & 0.994          & \multicolumn{1}{c|}{0.994}              & 1             \\ \hline
-			B              & \multicolumn{1}{c|}{=}                & -0.87              & -0.969              & -1                & -0.99          & \multicolumn{1}{c|}{-0.961}             & -1            \\
-			& \multicolumn{1}{c|}{-}                & -1                 & -1                  & -0.986            & -0.993         & \multicolumn{1}{c|}{-0.993}             & -1            \\
-			& \multicolumn{1}{c|}{!}                & 0.103              & 0.209               & 0.051             & 0.063          & \multicolumn{1}{c|}{0.071}              & 0.052         \\
-			& \multicolumn{1}{c|}{+}                & 0.218              & 0.154               & 0.246             & 0.146          & \multicolumn{1}{c|}{0.145}              & 0.142         \\
-			& \multicolumn{1}{c|}{\#}               & 0.999              & 1                   & 0.998             & 0.993          & \multicolumn{1}{c|}{0.993}              & 1             \\ \hline
-			D              & \multicolumn{1}{c|}{=}                & -1                 & -1                  & -1                & -0.995         & \multicolumn{1}{c|}{-0.995}             & -1            \\
-			& \multicolumn{1}{c|}{!}                & -0.289             & -0.262              & -0.187            & -0.278         & \multicolumn{1}{c|}{-0.275}             & -0.282        \\
-			& \multicolumn{1}{c|}{\#}               & 0.217              & 0.152               & 0.211             & 0.155          & \multicolumn{1}{c|}{0.155}              & 0.147         \\ \hline
-			E              & \multicolumn{1}{c|}{=}                & -0.941             & -0.986              & -1                & -0.994         & \multicolumn{1}{c|}{-0.989}             & -1            \\
-			& \multicolumn{1}{c|}{+}                & 0.364              & 0.375               & 0.432             & 0.371          & \multicolumn{1}{c|}{0.371}              & 0.372        
+			\multicolumn{2}{c|}{\textbf{Action}} & \textbf{Dec. Tree} & \textbf{Rand. For.} & \textbf{Regr. NN} & \textbf{RL NN} & {\textbf{Mim. Tree}} & \textbf{Data} \\ \hline
+			S              & =                & -1                 & -1                  & -1                & -0.998         & -0.998             & -1            \\
+			& -                &\textbf{-0.293}             & -0.291              & -0.262            & -0.29          & -0.29              & -0.293        \\
+			& !                & 0.103              & 0.011               & -0.066            & \textbf{-0.101}         & \textbf{-0.101}             & -0.106        \\
+			& +                & 0.103              & \textbf{0.246}               & 0.298             & 0.225          & 0.225              & 0.238         \\
+			& \#               & \textbf{1}                  & \textbf{1}                   & 0.985             & 0.997          & 0.998              & 1             \\ \hline
+			R              & =                & \textbf{-1}                 & \textbf{-1}                  & \textbf{-1}                & -0.998         & -0.998             & -1            \\
+			& -                & \textbf{-0.167}             & \textbf{-0.167}              & -0.118            & -0.157         & -0.157             & -0.166        \\
+			& !                & 0.104              & 0.039               & 0.192             & \textbf{0.11}           & 0.108              & 0.118         \\
+			& +                & 0.287              & \textbf{0.323}               & 0.424             & 0.325          & 0.325              & 0.321         \\
+			& \#               & 0.437              & 0.427               & 0.409             & \textbf{0.446}          & \textbf{0.446}              & 0.446         \\ \hline
+			A              & =                & -0.991             & -0.987              & \textbf{-0.997}            & -0.994         & -0.993             & -1            \\
+			& {/}                & -0.984             & -0.968              & -0.984            &\textbf{ -0.993}         & -0.986             & -1            \\
+			& -                & 0.02               & -0.052              & -0.021            &\textbf{ -0.072}         & \textbf{-0.072}             & -0.071        \\
+			& !                & 0.107              & 0.082               & 0.190             & \textbf{0.122}          & 0.117              & 0.127         \\
+			& +                & 0.302              & 0.284               & 0.439             & 0.372          & \textbf{0.368}              & 0.362         \\
+			& \#               & 0.947              & 0.99                & 0.988             & \textbf{0.994}          & \textbf{0.994}              & 1             \\ \hline
+			B              & =                & -0.87              & -0.969              & \textbf{-1}                & -0.99          & -0.961             & -1            \\
+			& -                &\textbf{-1}                 & \textbf{-1}                  & -0.986            & -0.993         & -0.993             & -1            \\
+			& !                & 0.103              & 0.209               & \textbf{0.051}             & 0.063          & 0.071              & 0.052         \\
+			& +                & 0.218              & 0.154               & 0.246             & 0.146          & \textbf{0.145}              & 0.142         \\
+			& \#               & 0.999              &\textbf{1}                   & 0.998             & 0.993          & 0.993              & 1             \\ \hline
+			D              & =                &\textbf{ -1}                 &\textbf{ -1}                  & \textbf{-1}                & -0.995         & -0.995             & -1            \\
+			& !                & -0.289             & -0.262              & -0.187            & \textbf{-0.278}         & -0.275             & -0.282        \\
+			& \#               & 0.217              & \textbf{0.152}               & 0.211             & 0.155          & 0.155              & 0.147         \\ \hline
+			E              & =                & -0.941             & -0.986              & \textbf{-1}                & -0.994         & -0.989             & -1            \\
+			& +                & 0.364              & 0.375               & 0.432             & \textbf{0.371}          & \textbf{0.371}              & 0.372        
 		\end{tabular}
-		\caption{Comparison of home action values computed by different models and directly from data.}
+		\caption{Comparison of home action values computed by different models and directly from data. Entries closest to data values in bold.}
 		\label{tab:qvalues_home}
 	\end{table}
 	
 	\begin{table}
 		\centering
-		\begin{tabular}{cccccccc}
+		\begin{tabular}{cc|ccccc|c}
 			\multicolumn{8}{c}{\textbf{Away Action Values}}                                                                                                                                \\
-			\multicolumn{2}{c|}{\textbf{Action}} & \textbf{Dec. Tree} & \textbf{Rand. For.} & \textbf{Regr. NN} & \textbf{RL NN} & \multicolumn{1}{c|}{\textbf{Mim. Tree}} & \textbf{Data} \\ \hline
-			S      & \multicolumn{1}{c|}{=}      & 1                  & 1                   & 0.999             & 0.999          & \multicolumn{1}{c|}{0.999}              & 1             \\
-			& \multicolumn{1}{c|}{-}      & 0.362              & 0.351               & 0.342             & 0.364          & \multicolumn{1}{c|}{0.364}              & 0.362         \\
-			& \multicolumn{1}{c|}{!}      & 0.107              & 0.11                & 0.076             & 0.11           & \multicolumn{1}{c|}{0.11}               & 0.118         \\
-			& \multicolumn{1}{c|}{+}      & -0.166             & -0.167              & -0.170            & -0.157         & \multicolumn{1}{c|}{-0.158}             & -0.167        \\
-			& \multicolumn{1}{c|}{\#}     & -1                 & -1                  & -0.992            & -0.998         & \multicolumn{1}{c|}{-0.997}             & -1            \\ \hline
-			R      & \multicolumn{1}{c|}{=}      & 1                  & 1                   & 1                 & 0.998          & \multicolumn{1}{c|}{0.998}              & 1             \\
-			& \multicolumn{1}{c|}{-}      & 0.239              & 0.239               & 0.184             & 0.225          & \multicolumn{1}{c|}{0.225}              & 0.238         \\
-			& \multicolumn{1}{c|}{!}      & -0.185             & -0.097              & -0.135            & -0.101         & \multicolumn{1}{c|}{-0.1}               & -0.106        \\
-			& \multicolumn{1}{c|}{+}      & -0.185             & -0.251              & -0.266            & -0.252         & \multicolumn{1}{c|}{-0.252}             & -0.256        \\
-			& \multicolumn{1}{c|}{\#}     & -0.369             & -0.368              & -0.377            & -0.373         & \multicolumn{1}{c|}{-0.373}             & -0.369        \\ \hline
-			A      & \multicolumn{1}{c|}{=}      & 0.986              & 0.987               & 0.991             & 0.994          & \multicolumn{1}{c|}{0.986}              & 1             \\
-			& \multicolumn{1}{c|}{/}      & 0.927              & 0.965               & 0.987             & 0.993          & \multicolumn{1}{c|}{0.99}               & 1             \\
-			& \multicolumn{1}{c|}{-}      & 0.114              & 0.151               & 0.150             & 0.155          & \multicolumn{1}{c|}{0.156}              & 0.153         \\
-			& \multicolumn{1}{c|}{!}      & 0.091              & 0.103               & -0.025            & 0.067          & \multicolumn{1}{c|}{0.072}              & 0.051         \\
-			& \multicolumn{1}{c|}{+}      & -0.204             & -0.206              & -0.264            & -0.287         & \multicolumn{1}{c|}{-0.275}             & -0.277        \\
-			& \multicolumn{1}{c|}{\#}     & -0.998             & -0.992              & -0.989            & -0.994         & \multicolumn{1}{c|}{-0.993}             & -1            \\ \hline
-			B      & \multicolumn{1}{c|}{=}      & 0.951              & 0.969               & 0.996             & 0.992          & \multicolumn{1}{c|}{0.991}              & 1             \\
-			& \multicolumn{1}{c|}{-}      & 0.999              & 1                   & 0.994             & 0.994          & \multicolumn{1}{c|}{0.994}              & 1             \\
-			& \multicolumn{1}{c|}{!}      & 0.116              & 0.109               & 0.142             & 0.123          & \multicolumn{1}{c|}{0.119}              & 0.127         \\
-			& \multicolumn{1}{c|}{+}      & -0.052             & -0.07               & -0.063            & -0.072         & \multicolumn{1}{c|}{-0.071}             &               \\
-			& \multicolumn{1}{c|}{\#}     & -1                 & -0.999              & -0.998            & -0.993         & \multicolumn{1}{c|}{-0.993}             & -1            \\ \hline
-			D      & \multicolumn{1}{c|}{=}      & 1                  & 1                   & 1                 & 0.995          & \multicolumn{1}{c|}{0.995}              & 1             \\
-			& \multicolumn{1}{c|}{!}      & 0.37               & 0.363               & 0.326             & 0.377          & \multicolumn{1}{c|}{0.378}              & 0.371         \\
-			& \multicolumn{1}{c|}{\#}     & -0.069             & -0.071              & -0.073            & -0.064         & \multicolumn{1}{c|}{-0.064}             & -0.062        \\ \hline
-			E      & \multicolumn{1}{c|}{=}      & 0.971              & 0.987               & 0.972             & 0.993          & \multicolumn{1}{c|}{0.989}              & 1             \\
-			& \multicolumn{1}{c|}{+}      & -0.281             & -0.287              & -0.311            & -0.283         & \multicolumn{1}{c|}{-0.284}             & -0.281       
+			\multicolumn{2}{c|}{\textbf{Action}} & \textbf{Dec. Tree} & \textbf{Rand. For.} & \textbf{Regr. NN} & \textbf{RL NN} & {\textbf{Mim. Tree}} & \textbf{Data} \\ \hline
+			S      & =      & \textbf{1}                  & \textbf{1}                   & 0.999             & 0.999          & 0.999              & 1             \\
+			& -      & \textbf{0.362}              & 0.351               & 0.342             & 0.364          & 0.364              & 0.362         \\
+			& !      & 0.107              & \textbf{0.11}                & 0.076             & \textbf{0.11}           & \textbf{0.11}              & 0.118         \\
+			& +      & -0.166             & \textbf{-0.167}              & -0.170            & -0.157         & -0.158             & -0.167        \\
+			& \#     & \textbf{-1}                 & \textbf{-1}                  & -0.992            & -0.998         & -0.997             & -1            \\ \hline
+			R      & =      &\textbf{ 1}                  & \textbf{1}                   & \textbf{1}                 & 0.998          & 0.998              & 1             \\
+			& -      & \textbf{0.239}              & \textbf{0.239}               & 0.184             & 0.225          & 0.225              & 0.238         \\
+			& !      & -0.185             & -0.097              & -0.135            & \textbf{-0.101}         & -0.1               & -0.106        \\
+			& +      & -0.185             & -0.251              & -0.266            & \textbf{-0.252}         & \textbf{-0.252}             & -0.256        \\
+			& \#     & \textbf{-0.369}             & -0.368              & -0.377            & -0.373         & -0.373             & -0.369        \\ \hline
+			A      & =      & 0.986              & 0.987               & 0.991             & \textbf{0.994}          & 0.986              & 1             \\
+			& /      & 0.927              & 0.965               & 0.987             & 0.993          & \textbf{0.99}               & 1             \\
+			& -      & 0.114              & 0.151               & 0.150             & \textbf{0.155}          & 0.156              & 0.153         \\
+			& !      & 0.091              & 0.103               & -0.025            & \textbf{0.067}          & 0.072              & 0.051         \\
+			& +      & -0.204             & -0.206              & -0.264            & -0.287         & \textbf{-0.275}             & -0.277        \\
+			& \#     & \textbf{-0.998}             & -0.992              & -0.989            & -0.994         & -0.993             & -1            \\ \hline
+			B      & =      & 0.951              & 0.969               & 0.996             & 0.992          & 0.991              & 1             \\
+			& -      & 0.999              & \textbf{1}                   & 0.994             & 0.994          & 0.994              & 1             \\
+			& !      & 0.116              & 0.109               & 0.142             & \textbf{0.123}          & 0.119              & 0.127         \\
+			& +      & -0.052             & -0.07               & -0.063            & \textbf{-0.072}         & -0.071             &  -0.075        \\
+			& \#     & \textbf{-1}                 & -0.999              & -0.998            & -0.993         & -0.993             & -1            \\ \hline
+			D      & =      & \textbf{1}                  & \textbf{1}                   & \textbf{1}                 & 0.995          & 0.995              & 1             \\
+			& !      & \textbf{0.37}               & 0.363               & 0.326             & 0.377          & 0.378              & 0.371         \\
+			& \#     & -0.069             & -0.071              & -0.073            & \textbf{-0.064}         & \textbf{-0.064}             & -0.062        \\ \hline
+			E      & =      & 0.971              & 0.987               & 0.972             & \textbf{0.993}          & 0.989              & 1             \\
+			& +      & \textbf{-0.281}             & -0.287              & -0.311            & -0.283         & -0.284             & -0.281       
 		\end{tabular}
-		\caption{Comparison of away action values computed by different models. See Table \ref{tab:qvalues_home}.}.
+		\caption{Comparison of away action values computed by different models. See also Table \ref{tab:qvalues_home}.}
 		\label{tab:qvalues_away}
 	\end{table}
 	
@@ -516,17 +559,23 @@
 	\begin{equation}
 		P_A(s,a) = \frac{1-Q(s,a)}{2}
 	\end{equation}
-	for the away team. These probabilities can be used to predict the eventual winner of the rally and evaluate accuracy differences between our models. Table \ref{tab:class_accuracy} shows prediction accuracies as well as cross entropy values over the entire dataset for the different models. Cross entropy for a single prediction is computed using the formula
+	for the away team. These  relationships can easily be derived by noting that one (and only one) of the two teams always wins the rally, hence \begin{equation}
+		P_H(s,a) + P_A(s,a) = 1.
+		\label{eq:home_away_win_prob}
+	\end{equation}
+	Furthermore, the reward function  \eqref{eq:reward_function} values depend precisely on those two events and therefore
+	$$Q(s,a) = P_H(s,a) - P_A(s,a).$$
+	Finally, substitution of \eqref{eq:home_away_win_prob} into this equation yields the formulas \eqref{eq:q_to_prob}. These probabilities can be used to predict the eventual winner of the rally and evaluate accuracy differences between our models. Table \ref{tab:class_accuracy} shows prediction accuracies as well as cross entropy values over the entire dataset for the different models. Cross entropy for a single prediction is computed using the formula
 	\begin{equation}
 		-\log P(y|P_H) = - (y \log P_H + (1-y) \log(1-P_H)),
 	\end{equation}
 	where $y \in \{0,1\}$ is the indicator variable for the home team eventually winning the current rally and $P_H$ is the according predicted home win probability. Dependency of $y$ and $P_H$ on $s$ and $a$ omitted here for brevity.\\
-	We consider some baselines in this context, against which to compare model accuracy. The home team has a slight advantage, so always predicting home is a possible baseline. Furthermore, the receiving team normally scores more often than the serving team, so always predicting the receiving team is another viable baseline. We find the following baseline accuracies are obtained:
+	We consider some baselines in this context, against which to compare model accuracy. The home team has a slight advantage, so always predicting home to win the rally is a possible baseline. Furthermore, the receiving team normally scores more often than the serving team, so always predicting the receiving team to win the rally is another viable baseline. We find the following baseline accuracies are obtained:
 	\begin{itemize}
 		\item Always predicting home team wins the rally: 0.5174,
 		\item Always predicting receiving team wins the rally: 0.5807.
 	\end{itemize}
-	From Table \ref{tab:class_accuracy} accuracy values, clearly all models perform well above the considered baselines, but the random forest model outperforms the rest with a prediction accuracy of just over 80\%, which suggests it as the best choice in the win prediction context. Despite the prediction accuracy advantage however, we will find that random forest is not the best choice when it comes to preserving state-action value properties inherited from the Markov decision process.\\
+	From Table \ref{tab:class_accuracy} accuracy values, clearly all models perform well above the considered baselines, but the random forest model outperforms the rest with a prediction accuracy of just over 80\%, which suggests it as the best choice in the win prediction context. Despite the prediction accuracy advantage however, we will find that random forest is not the best choice when it comes to preserving temporal consistency inherited from the Markov decision process.\\
 	\begin{table}
 		\centering
 		\begin{tabular}{c|cc}
@@ -628,9 +677,9 @@
 		\caption{Team mean ranking plotted against mean action impact for Canada West participating teams, see Table \ref{tab:team-impact} for values shown in this graph.}
 		\label{fig:team-impact}
 	\end{figure}
-
+	
 	\chapter{Conclusion}
-		
+	
 	
 	%   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%
